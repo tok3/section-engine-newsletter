@@ -77,9 +77,9 @@
 - [x] Commit `feat: accept newsletter signups with double opt-in requests`
 
 ### Task 4 – Confirmation
-- [ ] Mail, confirm GET page (button), confirm POST, expired-token page with resend form.
-- [ ] Tests: mail sent/queued per config and mailer; GET never changes state; POST confirms and logs `confirmed` with IP/UA; wrong/expired token; double confirm idempotent; `confirmation_sent` event.
-- [ ] Commit `feat: confirm newsletter subscriptions`
+- [x] Mail, confirm GET page (button), confirm POST, expired-token page with resend form.
+- [x] Tests: mail sent/queued per config and mailer; GET never changes state; POST confirms and logs `confirmed` with IP/UA; wrong/expired token; double confirm idempotent; `confirmation_sent` event.
+- [x] Commit `feat: confirm newsletter subscriptions`
 
 ### Task 5 – Unsubscribe
 - [ ] Signed GET page + POST, one-click endpoint.

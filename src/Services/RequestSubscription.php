@@ -4,9 +4,11 @@ namespace Tok3\SectionEngineNewsletter\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionEventType;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
+use Tok3\SectionEngineNewsletter\Mail\ConfirmSubscriptionMail;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 use Tok3\SectionEngineNewsletter\Models\Subscriber;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
@@ -37,6 +39,17 @@ class RequestSubscription
                 'confirmation_token_hash' => hash('sha256', $token), 'confirmation_expires_at' => now()->addHours(config('section-engine-newsletter.confirmation_ttl_hours')),
             ])->save();
             $this->record($subscription, $resubscribe ? SubscriptionEventType::ResubscribeRequested : SubscriptionEventType::Requested, $context, $request, ['mail_requested' => true]);
+
+            DB::afterCommit(function () use ($subscription, $token, $request): void {
+                $mail = (new ConfirmSubscriptionMail($subscription->id, $token, $request->ip(), $request->userAgent()))->locale($subscription->source_locale);
+                $mailer = Mail::mailer(config('section-engine-newsletter.mailer'))->to($subscription->subscriber->email);
+                $connection = config('section-engine-newsletter.queue');
+                if (is_string($connection) && $connection !== '') {
+                    $mailer->queue($mail->onConnection($connection));
+                } else {
+                    $mailer->send($mail);
+                }
+            });
 
             return $subscription;
         }, 3);

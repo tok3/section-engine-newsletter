@@ -29,6 +29,8 @@ abstract class TestCase extends Orchestra
     {
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         $app['config']->set('app.locale', 'en');
+        $app['config']->set('mail.default', 'array');
+        $app['config']->set('mail.mailers.array', ['transport' => 'array']);
         $app['config']->set('section-engine.design_mode', false);
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => true]);
