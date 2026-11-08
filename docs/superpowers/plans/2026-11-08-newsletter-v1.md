@@ -106,8 +106,8 @@
 - [x] Commit `feat: complete newsletter translations and accessibility`
 
 ### Task 10 – Documentation
-- [ ] `README.md`, `docs/installation.md`, `docs/embedding.md` (end-user guide with examples), `docs/admin.md`, `docs/privacy.md` (stored data, retention, consent proof, privacy-policy building blocks, "not legal advice"), `docs/developer.md` (events, config, extension points, Phase 2 outlook). `CHANGELOG.md` `Unreleased` entries.
-- [ ] Commit `docs: document section engine newsletter`
+- [x] `README.md`, `docs/installation.md`, `docs/embedding.md` (end-user guide with examples), `docs/admin.md`, `docs/privacy.md` (stored data, retention, consent proof, privacy-policy building blocks, "not legal advice"), `docs/developer.md` (events, config, extension points, Phase 2 outlook). `CHANGELOG.md` `Unreleased` entries.
+- [x] Commit `docs: document section engine newsletter`
 
 ### Task 11 – Verification and local integration check
 - [ ] Full matrix: `composer test`, `composer format:check`, `composer analyse`, JS tests.
