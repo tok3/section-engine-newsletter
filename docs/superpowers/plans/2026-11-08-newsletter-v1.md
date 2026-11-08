@@ -97,9 +97,9 @@
 - [x] Commit `feat: manage newsletter lists in filament`
 
 ### Task 8 – Filament: subscribers
-- [ ] `SubscriberResource`: table (email, list status chips, tags, source page link, dates), filters (list, status, tag, source page, date range), detail with full event history, actions: CSV export (respects filters), consent proof view, manual unsubscribe (`admin_action` event), permanent delete (confirmation, removes all rows), "add manually" = create pending + send confirmation mail. Dashboard widget signups last 30 days per list/tag.
-- [ ] Tests for every action incl. CSV content, hard delete leaves no rows, manual add never confirms directly.
-- [ ] Commit `feat: manage newsletter subscribers in filament`
+- [x] `SubscriberResource`: table (email, list status chips, tags, source page link, dates), filters (list, status, tag, source page, date range), detail with full event history, actions: CSV export (respects filters), consent proof view, manual unsubscribe (`admin_action` event), permanent delete (confirmation, removes all rows), "add manually" = create pending + send confirmation mail. Dashboard widget signups last 30 days per list/tag.
+- [x] Tests for every action incl. CSV content, hard delete leaves no rows, manual add never confirms directly.
+- [x] Commit `feat: manage newsletter subscribers in filament`
 
 ### Task 9 – Translations and accessibility pass
 - [ ] Complete `de`/`en`. Review form against AGENTS.md accessibility rules; fix and test focus/aria behaviour in a JS test (jsdom) for the progressive enhancement.

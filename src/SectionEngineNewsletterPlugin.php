@@ -5,6 +5,8 @@ namespace Tok3\SectionEngineNewsletter;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Tok3\SectionEngineNewsletter\Filament\Resources\NewsletterListResource;
+use Tok3\SectionEngineNewsletter\Filament\Resources\SubscriberResource;
+use Tok3\SectionEngineNewsletter\Filament\Widgets\SignupWidget;
 
 class SectionEngineNewsletterPlugin implements Plugin
 {
@@ -20,7 +22,7 @@ class SectionEngineNewsletterPlugin implements Plugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources([NewsletterListResource::class]);
+        $panel->resources([NewsletterListResource::class, SubscriberResource::class])->widgets([SignupWidget::class]);
     }
 
     public function boot(Panel $panel): void {}

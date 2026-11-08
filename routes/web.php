@@ -5,10 +5,12 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Tok3\SectionEngineNewsletter\Http\Controllers\ConfirmController;
+use Tok3\SectionEngineNewsletter\Http\Controllers\ProofController;
 use Tok3\SectionEngineNewsletter\Http\Controllers\SubscribeController;
 use Tok3\SectionEngineNewsletter\Http\Controllers\UnsubscribeController;
 
 Route::middleware('web')->prefix(trim(config('section-engine-newsletter.route_prefix', 'newsletter'), '/'))->name('section-engine-newsletter.')->group(function (): void {
+    Route::get('proof/{subscriber}', ProofController::class)->name('proof');
     Route::get('unsubscribe/{subscription}', [UnsubscribeController::class, 'show'])->middleware('signed')->name('unsubscribe.show');
     Route::post('unsubscribe/{subscription}', [UnsubscribeController::class, 'unsubscribe'])->middleware('signed')->name('unsubscribe');
     Route::post('unsubscribe/{subscription}/one-click', [UnsubscribeController::class, 'oneClick'])
