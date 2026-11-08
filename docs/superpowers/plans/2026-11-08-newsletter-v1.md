@@ -92,9 +92,9 @@
 - [x] Commit `feat: dispatch newsletter events and prune stale data`
 
 ### Task 7 – Filament: lists
-- [ ] `NewsletterListResource`: CRUD, counts per status, consent texts per locale, "embedded on" via `LiveTagUsageFinder`, copy-snippet action.
-- [ ] Tests: access only with `SectionEngineAccess`; counts; usage list; validation (key format `[a-z0-9_-]`, unique).
-- [ ] Commit `feat: manage newsletter lists in filament`
+- [x] `NewsletterListResource`: CRUD, counts per status, consent texts per locale, "embedded on" via `LiveTagUsageFinder`, copy-snippet action.
+- [x] Tests: access only with `SectionEngineAccess`; counts; usage list; validation (key format `[a-z0-9_-]`, unique).
+- [x] Commit `feat: manage newsletter lists in filament`
 
 ### Task 8 – Filament: subscribers
 - [ ] `SubscriberResource`: table (email, list status chips, tags, source page link, dates), filters (list, status, tag, source page, date range), detail with full event history, actions: CSV export (respects filters), consent proof view, manual unsubscribe (`admin_action` event), permanent delete (confirmation, removes all rows), "add manually" = create pending + send confirmation mail. Dashboard widget signups last 30 days per list/tag.
