@@ -42,6 +42,19 @@ class SubscribeRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'email.required' => __('section-engine-newsletter::newsletter.email_required'),
+            'email.email' => __('section-engine-newsletter::newsletter.email_invalid'),
+            'email.max' => __('section-engine-newsletter::newsletter.email_invalid'),
+            'email.string' => __('section-engine-newsletter::newsletter.email_invalid'),
+            'consent.accepted' => __('section-engine-newsletter::newsletter.consent_required'),
+            'website.max' => __('section-engine-newsletter::newsletter.invalid_form'),
+        ];
+    }
+
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator): void
     {
         if ($this->expectsJson() || $this->formContext === []) {

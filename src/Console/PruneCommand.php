@@ -10,7 +10,10 @@ class PruneCommand extends Command
 {
     protected $signature = 'section-engine-newsletter:prune';
 
-    protected $description = 'Apply newsletter retention periods';
+    public function getDescription(): string
+    {
+        return __('section-engine-newsletter::admin.prune_description');
+    }
 
     public function handle(): int
     {

@@ -2,7 +2,7 @@
 @if(isset($feedback['form_id']))<span id="newsletter-{{ $feedback['form_id'] }}"></span>@endif
 <div class="newsletter-form newsletter-form--{{ $variant }}" lang="{{ $data['locale'] }}">
     @if($preview)<small>{{ __('section-engine-newsletter::newsletter.preview', ['list' => $list->name], $data['locale']) }}{{ $data['tag'] ? ', Tag: '.$data['tag'] : '' }}</small>@endif
-    <form id="{{ $id }}" action="{{ url(trim(config('section-engine-newsletter.route_prefix'), '/').'/subscribe') }}" method="post" data-newsletter-form>
+    <form id="{{ $id }}" action="{{ url(trim(config('section-engine-newsletter.route_prefix'), '/').'/subscribe') }}" method="post" data-newsletter-form data-error-message="{{ __('section-engine-newsletter::newsletter.network_error', [], $data['locale']) }}">
         <input type="hidden" name="_token" value="{{ csrf_token() }}" @disabled($preview)>
         <input type="hidden" name="context" value="{{ $encryptedContext }}" @disabled($preview)>
         <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
@@ -17,13 +17,13 @@
         <p id="{{ $id }}-consent-text">{{ $consent }}</p>
         @if(config('section-engine-newsletter.require_checkbox'))
             <div class="form-check mb-3">
-                <input class="form-check-input" id="{{ $id }}-consent" type="checkbox" name="consent" value="1" required aria-describedby="{{ $id }}-consent-text {{ $id }}-consent-error" @disabled($preview)>
+                <input class="form-check-input" id="{{ $id }}-consent" type="checkbox" name="consent" value="1" required @if(isset($feedback['errors']['consent'])) aria-invalid="true" autofocus @endif aria-describedby="{{ $id }}-consent-text {{ $id }}-consent-error" @disabled($preview)>
                 <label class="form-check-label" for="{{ $id }}-consent">{{ $checkboxLabel }}</label>
                 <div class="text-danger" id="{{ $id }}-consent-error" data-error="consent">{{ implode(' ', $feedback['errors']['consent'] ?? []) }}</div>
             </div>
         @endif
         <button class="btn btn-primary" type="submit" style="min-height:44px" @disabled($preview)>{{ __('section-engine-newsletter::newsletter.subscribe', [], $data['locale']) }}</button>
-        <div id="{{ $id }}-status" role="status" aria-live="polite" tabindex="-1" data-newsletter-status>{{ $feedback['message'] ?? implode(' ', $feedback['errors']['context'] ?? []) }}</div>
+        <div id="{{ $id }}-status" role="status" aria-live="polite" tabindex="-1" data-newsletter-status @if(isset($feedback['message']) || isset($feedback['errors']['context'])) autofocus @endif>{{ $feedback['message'] ?? implode(' ', $feedback['errors']['context'] ?? []) }}</div>
     </form>
 </div>
 @if($includeScript)@include('section-engine-newsletter::form.script')@endif
