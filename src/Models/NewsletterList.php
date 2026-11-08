@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Tok3\SectionEngineNewsletter\Database\Factories\NewsletterListFactory;
 
 /**
+ * @property int $id
  * @property string $key
  * @property string $name
  * @property array<string, string> $consent_text

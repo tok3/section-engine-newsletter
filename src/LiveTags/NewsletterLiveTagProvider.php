@@ -41,7 +41,18 @@ class NewsletterLiveTagProvider implements LiveTagProvider
             $scripts[request()] = true;
         }
 
-        return view($variants[$variant], [
+        $feedback = [];
+        foreach (session('section-engine-newsletter', []) as $formId => $entry) {
+            $previous = $entry['context'] ?? [];
+            if (($previous['list'] ?? null) === $data['list'] && ($previous['tag'] ?? null) === $data['tag']
+                && ($previous['url'] ?? null) === $data['url'] && ($previous['page_id'] ?? null) === $data['page_id']
+                && ($previous['instance'] ?? null) === $data['instance']) {
+                $feedback = $entry + ['form_id' => $formId];
+                break;
+            }
+        }
+
+        return view($variants[$variant], ['feedback' => $feedback,
             'list' => $list, 'data' => $data, 'encryptedContext' => $formContext->encrypt($data),
             'preview' => $context->editorPreview, 'variant' => $variant, 'includeScript' => $includeScript,
             'consent' => FormContext::localized($list->consent_text, $context->locale),

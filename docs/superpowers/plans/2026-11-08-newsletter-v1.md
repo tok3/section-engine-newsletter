@@ -72,9 +72,9 @@
 - [x] Commit `feat: render newsletter signup forms via live tags`
 
 ### Task 3 – Subscribe endpoint
-- [ ] Controller + form request implementing spec "Signup flow" steps 1–3 with Decisions 3–9.
-- [ ] Tests: each case (new, pending resend within/after cooldown, confirmed, unsubscribed→pending) → identical response; honeypot, fill time, tampered/expired context, rate limits; required checkbox; JSON and redirect modes; events `requested`/`resubscribe_requested` with full IP and user agent; nothing stored on rejection; routes reachable with core fallback route.
-- [ ] Commit `feat: accept newsletter signups with double opt-in requests`
+- [x] Controller + form request implementing spec "Signup flow" steps 1–3 with Decisions 3–9.
+- [x] Tests: each case (new, pending resend within/after cooldown, confirmed, unsubscribed→pending) → identical response; honeypot, fill time, tampered/expired context, rate limits; required checkbox; JSON and redirect modes; events `requested`/`resubscribe_requested` with full IP and user agent; nothing stored on rejection; routes reachable with core fallback route.
+- [x] Commit `feat: accept newsletter signups with double opt-in requests`
 
 ### Task 4 – Confirmation
 - [ ] Mail, confirm GET page (button), confirm POST, expired-token page with resend form.

@@ -2,6 +2,7 @@
 
 namespace Tok3\SectionEngineNewsletter\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,13 @@ use LogicException;
 use Tok3\SectionEngineNewsletter\Database\Factories\SubscriptionEventFactory;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionEventType;
 
+/**
+ * @property int $id
+ * @property SubscriptionEventType $type
+ * @property string|null $ip
+ * @property string|null $user_agent
+ * @property CarbonImmutable $created_at
+ */
 class SubscriptionEvent extends Model
 {
     /** @use HasFactory<SubscriptionEventFactory> */

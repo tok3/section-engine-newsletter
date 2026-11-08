@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Tok3\SectionEngineNewsletter\Database\Factories\SubscriberFactory;
 
+/**
+ * @property int $id
+ * @property string $email
+ * @property string $locale
+ */
 class Subscriber extends Model
 {
     /** @use HasFactory<SubscriberFactory> */
