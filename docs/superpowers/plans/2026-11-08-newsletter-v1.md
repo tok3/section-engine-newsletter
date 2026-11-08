@@ -82,9 +82,9 @@
 - [x] Commit `feat: confirm newsletter subscriptions`
 
 ### Task 5 – Unsubscribe
-- [ ] Signed GET page + POST, one-click endpoint.
-- [ ] Tests: signature required; state change only on POST/one-click; event `unsubscribed` with IP; resubscribe requires new double opt-in.
-- [ ] Commit `feat: unsubscribe from newsletter lists`
+- [x] Signed GET page + POST, one-click endpoint.
+- [x] Tests: signature required; state change only on POST/one-click; event `unsubscribed` with IP; resubscribe requires new double opt-in.
+- [x] Commit `feat: unsubscribe from newsletter lists`
 
 ### Task 6 – Domain events and retention
 - [ ] Dispatch `SubscriptionRequested`, `SubscriptionConfirmed`, `SubscriptionUnsubscribed`, `SubscriberDeleted`. Prune command + schedule.
