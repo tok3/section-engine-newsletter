@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionEventType;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
+use Tok3\SectionEngineNewsletter\Events\SubscriptionRequested;
 use Tok3\SectionEngineNewsletter\Mail\ConfirmSubscriptionMail;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 use Tok3\SectionEngineNewsletter\Models\Subscriber;
@@ -22,6 +23,7 @@ class RequestSubscription
             $list = NewsletterList::query()->where('key', $context['list'])->where('active', true)->firstOrFail();
             $subscriber = Subscriber::firstOrCreate(['email' => mb_strtolower(trim($email))], ['locale' => $context['locale']]);
             $subscription = Subscription::query()->where('subscriber_id', $subscriber->id)->where('list_id', $list->id)->lockForUpdate()->first();
+            $isNew = $subscription === null;
             $resubscribe = $subscription?->status === SubscriptionStatus::Unsubscribed;
             if ($subscription?->status === SubscriptionStatus::Confirmed || ($subscription?->status === SubscriptionStatus::Pending && $subscription->requested_at->gt(now()->subMinutes(config('section-engine-newsletter.resend_cooldown_minutes'))))) {
                 $this->record($subscription, SubscriptionEventType::Requested, $context, $request, ['mail_requested' => false]);
@@ -40,6 +42,9 @@ class RequestSubscription
             ])->save();
             $this->record($subscription, $resubscribe ? SubscriptionEventType::ResubscribeRequested : SubscriptionEventType::Requested, $context, $request, ['mail_requested' => true]);
 
+            if ($isNew || $resubscribe) {
+                DB::afterCommit(fn () => SubscriptionRequested::dispatch($subscription));
+            }
             DB::afterCommit(function () use ($subscription, $token, $request): void {
                 $mail = (new ConfirmSubscriptionMail($subscription->id, $token, $request->ip(), $request->userAgent()))->locale($subscription->source_locale);
                 $mailer = Mail::mailer(config('section-engine-newsletter.mailer'))->to($subscription->subscriber->email);

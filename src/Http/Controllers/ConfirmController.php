@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Tok3\SectionEngine\Support\LiveTokenRenderContext;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
+use Tok3\SectionEngineNewsletter\Events\SubscriptionConfirmed;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
 use Tok3\SectionEngineNewsletter\Support\FormContext;
 
@@ -42,6 +43,7 @@ class ConfirmController
                     'type' => 'confirmed', 'tag' => $subscription->tag, 'source_page_id' => $subscription->source_page_id,
                     'source_url' => $subscription->source_url, 'ip' => $request->ip(), 'user_agent' => $request->userAgent(),
                 ]);
+                DB::afterCommit(fn () => SubscriptionConfirmed::dispatch($subscription));
             }
 
             return view('section-engine-newsletter::result', ['message' => __('section-engine-newsletter::newsletter.confirmed')]);

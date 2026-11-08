@@ -5,6 +5,7 @@ namespace Tok3\SectionEngineNewsletter\Services;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
+use Tok3\SectionEngineNewsletter\Events\SubscriptionUnsubscribed;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
 
 class UnsubscribeSubscription
@@ -19,6 +20,7 @@ class UnsubscribeSubscription
                     'type' => 'unsubscribed', 'tag' => $subscription->tag, 'source_page_id' => $subscription->source_page_id,
                     'source_url' => $subscription->source_url, 'ip' => $request->ip(), 'user_agent' => $request->userAgent(),
                 ]);
+                DB::afterCommit(fn () => SubscriptionUnsubscribed::dispatch($subscription));
             }
 
             return $subscription;

@@ -64,7 +64,7 @@ encrypted with the app key, so visitors cannot manipulate list, tag or source.
 `newsletter_subscriptions` (one row per subscriber × list, unique pair)
 - `id`, `subscriber_id`, `list_id`
 - `status`: `pending` | `confirmed` | `unsubscribed`
-- `tag` (nullable), `source_page_id` (nullable, null on page delete), `source_url`, `source_locale`
+- `tag` (nullable), `source_page_id` (nullable, historical reference, no FK, never cleared), `source_url`, `source_locale`
 - `consent_text_snapshot` (exact text shown), `consent_hash`
 - `requested_at`, `requested_ip`, `requested_user_agent`
 - `confirmed_at`, `confirmed_ip`, `confirmed_user_agent`

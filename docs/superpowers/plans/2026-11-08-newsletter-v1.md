@@ -26,7 +26,7 @@
 
 ## Fixed Technical Decisions (do not re-decide)
 
-1. **Tables** (prefix like core): `section_engine_newsletter_lists`, `section_engine_newsletter_subscribers`, `section_engine_newsletter_subscriptions`, `section_engine_newsletter_events`. Columns exactly as the spec "Data model"; bigint auto-increment ids; foreign keys: subscriptions → subscribers/lists `cascadeOnDelete`, events → subscriptions `cascadeOnDelete`, `source_page_id` without FK (`nullable`, page model is configurable). Unique (`subscriber_id`, `list_id`). Index on `status`, `tag`, `source_page_id`.
+1. **Tables** (prefix like core): `section_engine_newsletter_lists`, `section_engine_newsletter_subscribers`, `section_engine_newsletter_subscriptions`, `section_engine_newsletter_events`. Columns exactly as the spec "Data model"; bigint auto-increment ids; foreign keys: subscriptions → subscribers/lists `cascadeOnDelete`, events → subscriptions `cascadeOnDelete`, `source_page_id` without FK (`nullable`, page model is configurable). **Decision 2026-11-08 (resolves BLOCKED_BY_CORE_SEAM on page deletion):** `source_page_id` is a historical reference and is never cleared or rewritten when a page is deleted (core pages are soft-deleted; a later force delete only leaves a dangling id). `source_url` is the durable source reference in the consent proof. Filament resolves the page lazily via the configured page model (`config('section-engine.models.page')`, including trashed) and shows "Seite gelöscht" plus `source_url` when it no longer exists. No observer, no lifecycle hook, no core change. Unique (`subscriber_id`, `list_id`). Index on `status`, `tag`, `source_page_id`.
 2. **Status** is a backed enum `SubscriptionStatus` (`pending`, `confirmed`, `unsubscribed`) with `label()` and `color()`; this is the only place colours are defined. Event types as enum `SubscriptionEventType`.
 3. **Email normalisation:** `mb_strtolower(trim())`, max 254, validated `email:rfc` (DNS check only if `config validate_dns` true, default false).
 4. **Signed form context:** hidden field `context` = `Crypt::encryptString(json)` with `list`, `tag`, `page_id`, `url`, `locale`, `form_id` (random 16 hex per render), `rendered_at` (unix). Rejected if not decryptable or older than `context_ttl_hours` (default 168). Honeypot field name `website` (visually hidden, `tabindex="-1"`, `autocomplete="off"`). Minimum fill time `min_fill_seconds` (default 3) against `rendered_at`.
@@ -87,9 +87,9 @@
 - [x] Commit `feat: unsubscribe from newsletter lists`
 
 ### Task 6 – Domain events and retention
-- [ ] Dispatch `SubscriptionRequested`, `SubscriptionConfirmed`, `SubscriptionUnsubscribed`, `SubscriberDeleted`. Prune command + schedule.
-- [ ] Tests: events dispatched once per transition; prune deletes old pending incl. events; anonymises IP/UA of old unsubscribed proof; leaves everything else untouched; schedule registered.
-- [ ] Commit `feat: dispatch newsletter events and prune stale data`
+- [x] Dispatch `SubscriptionRequested`, `SubscriptionConfirmed`, `SubscriptionUnsubscribed`, `SubscriberDeleted`. Prune command + schedule.
+- [x] Tests: events dispatched once per transition; prune deletes old pending incl. events; anonymises IP/UA of old unsubscribed proof; leaves everything else untouched; schedule registered.
+- [x] Commit `feat: dispatch newsletter events and prune stale data`
 
 ### Task 7 – Filament: lists
 - [ ] `NewsletterListResource`: CRUD, counts per status, consent texts per locale, "embedded on" via `LiveTagUsageFinder`, copy-snippet action.
@@ -122,3 +122,36 @@
 - Only documented core APIs used; no core changes.
 - Accessibility of the form; works without JS.
 - Leibnizer integration fully reverted.
+
+## Übergabenotiz – unterbrochener Build (2026-11-08)
+
+**Status: `BLOCKED_BY_CORE_SEAM` – v1 ist nicht fertig.** Tasks 0–5 wurden der Reihe nach test-first umgesetzt und einzeln committet. Task 6 enthält bislang nur neue, erwartungsgemäß fehlschlagende Tests (uncommittet). Tasks 6–11 sind nicht abgeschlossen. Die Prüfung gegen „Review Focus“ wurde nicht durchgeführt; sie bleibt bei Claude.
+
+### Blockierende Core-Schnittstelle
+
+Die Spec verlangt für `newsletter_subscriptions.source_page_id`: „nullable, null on page delete“. Fixed Technical Decision 1 verlangt ausdrücklich keinen Foreign Key, weil das Page-Modell konfigurierbar ist. Die erlaubten dokumentierten Schnittstellen in `vendor/tok3/section-engine/docs/live-tag-providers.md` liefern Render-Kontext und Usage-Finder, aber keinen dokumentierten Seitenlöschungs-Hook und keine verbindliche Auflösung des konfigurierten Page-Modells für einen Lifecycle-Observer. Ein Observer auf Core-Modelle bzw. die Verwendung einer nicht dokumentierten Modell-Konfiguration wäre ein zusätzlicher Integrationsweg und wurde deshalb nicht implementiert. Benötigt wird eine dokumentierte Core-Schnittstelle für die zuverlässige Bereinigung von Seitenreferenzen beim Löschen – oder eine ausdrückliche Anpassung dieser Anforderung/des erlaubten Schnittstellenumfangs.
+
+### Gebauter Zwischenstand und Prüfung
+
+- `a753399` – Scaffold, Composer/Testbench/Workbench, Provider-Registrierung.
+- `fe306fb` – Schema, Modelle, Enums, Factories, Normalisierung, Eindeutigkeit, Kaskaden und Append-only-Modellschutz.
+- `44dde3a` – Live-Tag-Formulare, verschlüsselter Seitenkontext, Varianten, Preview, Escaping und zugängliches HTML. Das Script ist bislang nur der Einbindungspunkt; die Fetch-Erweiterung samt JS-Tests ist noch Task 9.
+- `b1f6ea0` – Subscribe-Endpoint, Validierung, Spam-Schutz, Rate Limits, Tokens, Einwilligungssnapshot und formulargebundene Rückmeldungen ohne JS.
+- `e4d7796` – Bestätigungsmail, tatsächlicher Versandnachweis, Queue/Mailer-Auswahl, GET/POST-Bestätigung und abgelaufene Tokens.
+- `4157157` – Signierte Abmeldeseiten/-aktionen, RFC-8058-POST und erneuter Double Opt-in.
+
+Letzter vollständig grüner Zwischenstand nach Task 5: `composer test` **53 Tests / 279 Assertions**, `composer format` und `composer analyse` erfolgreich (PHP 8.3.30, Core v1.1.0). Die neu geschriebenen Task-6-Tests sind rot, weil Domain-Events, Prune-Command und Zeitplan noch fehlen. Die vollständige Abschlussmatrix und die lokale Integration wurden nicht durchgeführt. Tests verwenden Mail-Fakes bzw. den Array-Transport; keine externen Mails wurden versendet.
+
+### Ergänzungen gegenüber dem Plan
+
+Der verschlüsselte Formularkontext enthält zusätzlich `consent_snapshot`, damit zwischen Rendern und Absenden geänderte Listentexte den Nachweis nicht verfälschen, und `instance`, damit Rückmeldungen ohne JS auch bei identischen mehrfach eingebundenen Formularen richtig zugeordnet werden. Die vorgegebenen Felder bleiben erhalten; jede Darstellung erzeugt weiterhin eine zufällige `form_id`. Das statische Script-Flag ist über eine WeakMap an den Request gebunden, damit es auch in langlebigen PHP-Prozessen pro Seite gilt. Keine Core- oder Editorial-Änderungen.
+
+### Noch offene Arbeit
+
+Blockierende Lifecycle-Schnittstelle klären; Task 6 fertigstellen; Tasks 7–8 Filament und Exporte/Widget; Task 9 vollständige Übersetzungen und Progressive Enhancement mit JS-Tests; Task 10 öffentliche Dokumentation; Task 11 vollständige Prüfmatrix und vollständig zurückgerollte lokale Integration. Die aktuellen Commits sind ein Zwischenstand und kein Release.
+
+### Später benötigte Verbraucheränderungen (noch nicht ausgeführt)
+
+Nach Fertigstellung für den lokalen Integrationstest: Composer-Path-Repository `../section-engine-newsletter` mit Symlink und Require `tok3/section-engine-newsletter:dev-main`; Core `^1.1.0` und Filament 5 müssen vorhanden sein. Im vorhandenen Filament-Panel zusätzlich `Tok3\SectionEngineNewsletter\SectionEngineNewsletterPlugin::make()` registrieren. Paketmigrationen mit `php artisan vendor:publish --tag=section-engine-newsletter-migrations` veröffentlichen und `php artisan migrate` ausführen. Für den lokalen Test `MAIL_MAILER=log` setzen; für den späteren Betrieb den Laravel-Mailer konfigurieren und den Laravel-Scheduler (`php artisan schedule:run` minütlich) betreiben; bei konfigurierter Queue einen Worker starten. Listen und deren Einwilligungstexte vor Einbindung anlegen. Der geplante Prune-Command und die Admin-Ressourcen fehlen im Zwischenstand noch.
+
+`~/Sites/leibnizer-dev` wurde ausschließlich gelesen. Seine vorhandenen Änderungen wurden weder verändert noch zurückgesetzt; Task 11 wurde nicht begonnen. Kein Push, kein Tag.
