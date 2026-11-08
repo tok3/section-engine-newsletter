@@ -1,0 +1,7 @@
+/vendor/
+/node_modules/
+/.superpowers/
+/.phpunit.cache/
+/build/
+.DS_Store
+/workbench/database/*.sqlite

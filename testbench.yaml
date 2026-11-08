@@ -1,0 +1,22 @@
+laravel: "@testbench"
+providers:
+  - Livewire\LivewireServiceProvider
+  - Filament\Support\SupportServiceProvider
+  - BladeUI\Icons\BladeIconsServiceProvider
+  - BladeUI\Heroicons\BladeHeroiconsServiceProvider
+  - Filament\Actions\ActionsServiceProvider
+  - Filament\Forms\FormsServiceProvider
+  - Filament\Infolists\InfolistsServiceProvider
+  - Filament\Notifications\NotificationsServiceProvider
+  - Filament\Schemas\SchemasServiceProvider
+  - Filament\Tables\TablesServiceProvider
+  - Filament\Widgets\WidgetsServiceProvider
+  - Filament\FilamentServiceProvider
+  - Tok3\SectionEngine\SectionEngineServiceProvider
+  - Tok3\SectionEngineNewsletter\SectionEngineNewsletterServiceProvider
+  - Workbench\App\Providers\NewsletterAdminPanelProvider
+workbench:
+  start: /admin
+  install: true
+  auth: true
+  health: false
