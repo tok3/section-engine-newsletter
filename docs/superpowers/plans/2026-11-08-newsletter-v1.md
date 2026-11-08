@@ -110,9 +110,9 @@
 - [x] Commit `docs: document section engine newsletter`
 
 ### Task 11 – Verification and local integration check
-- [ ] Full matrix: `composer test`, `composer format:check`, `composer analyse`, JS tests.
-- [ ] Local integration in `~/Sites/leibnizer-dev`, **uncommitted, to be reverted afterwards**: path repository to `../section-engine-newsletter` (symlink), require `dev-main`, migrate, register plugin in the panel, `MAIL_MAILER=log`. Embed `{{ newsletter:test tag=probe }}` on a test page, sign up, confirm via link from the log, unsubscribe; check Filament lists/subscribers and event history. Then revert all `leibnizer-dev` changes and confirm `git status` there matches the state before.
-- [ ] Handoff note at the end of this file: what was built, deviations with reason, open issues, exact consumer changes needed later (composer, panel registration, migrations, env). Do not mark complete if any test was skipped or weakened.
+- [x] Full matrix: `composer test`, `composer format:check`, `composer analyse`, JS tests.
+- [x] Local integration in `~/Sites/leibnizer-dev`, **uncommitted, to be reverted afterwards**: path repository to `../section-engine-newsletter` (symlink), require `dev-main`, migrate, register plugin in the panel, `MAIL_MAILER=log`. Embed `{{ newsletter:test tag=probe }}` on a test page, sign up, confirm via link from the log, unsubscribe; check Filament lists/subscribers and event history. Then revert all `leibnizer-dev` changes and confirm `git status` there matches the state before.
+- [x] Handoff note at the end of this file: what was built, deviations with reason, open issues, exact consumer changes needed later (composer, panel registration, migrations, env). Do not mark complete if any test was skipped or weakened.
 
 ## Review Focus (for the Claude review after the build – not a self-check)
 
@@ -123,35 +123,43 @@
 - Accessibility of the form; works without JS.
 - Leibnizer integration fully reverted.
 
-## Übergabenotiz – unterbrochener Build (2026-11-08)
+## Übergabenotiz – Build abgeschlossen (2026-11-08)
 
-**Status: `BLOCKED_BY_CORE_SEAM` – v1 ist nicht fertig.** Tasks 0–5 wurden der Reihe nach test-first umgesetzt und einzeln committet. Task 6 enthält bislang nur neue, erwartungsgemäß fehlschlagende Tests (uncommittet). Tasks 6–11 sind nicht abgeschlossen. Die Prüfung gegen „Review Focus“ wurde nicht durchgeführt; sie bleibt bei Claude.
+Tasks 0–11 sind der Reihe nach umgesetzt, test-first für Produktionsänderungen und mit einem Commit pro Task. Der frühere Blocker ist durch die ausdrücklich freigegebene Decision 2026-11-08 aufgehoben. `source_page_id` bleibt historisch erhalten; Filament löst das konfigurierte Page-Modell lazy einschließlich archivierter Seiten auf. Bei fehlender Seite erscheint „Seite gelöscht“ samt dauerhafter `source_url`. Kein Observer und keine Core-/Editorial-Änderung.
 
-### Blockierende Core-Schnittstelle
+### Gebaut
 
-Die Spec verlangt für `newsletter_subscriptions.source_page_id`: „nullable, null on page delete“. Fixed Technical Decision 1 verlangt ausdrücklich keinen Foreign Key, weil das Page-Modell konfigurierbar ist. Die erlaubten dokumentierten Schnittstellen in `vendor/tok3/section-engine/docs/live-tag-providers.md` liefern Render-Kontext und Usage-Finder, aber keinen dokumentierten Seitenlöschungs-Hook und keine verbindliche Auflösung des konfigurierten Page-Modells für einen Lifecycle-Observer. Ein Observer auf Core-Modelle bzw. die Verwendung einer nicht dokumentierten Modell-Konfiguration wäre ein zusätzlicher Integrationsweg und wurde deshalb nicht implementiert. Benötigt wird eine dokumentierte Core-Schnittstelle für die zuverlässige Bereinigung von Seitenreferenzen beim Löschen – oder eine ausdrückliche Anpassung dieser Anforderung/des erlaubten Schnittstellenumfangs.
+Composer-Paket mit Testbench/Workbench, Schema/Modellen/Factories/Enums, Newsletter-Live-Tag und zugänglichen Formularen, verschlüsseltem Kontext und Einwilligungssnapshot, generischen Antworten, Rate Limits/Spam-Schutz, Double Opt-in, Laravel-Mailer und optionaler Queue, GET/POST-Trennung, signierter Abmeldung und RFC-8058-POST. Append-only-Modellschutz, vollständige IP-/User-Agent-Ereignisse, Domain-Events und tägliche Retention. Filament-Listen und Teilnehmer mit Statuschips, allen Filtern, gefiltertem CSV-Download, druckbarem Einwilligungsnachweis, vollständiger Ereignishistorie, manueller Bestätigungsanforderung, Admin-Abmeldung, endgültiger Löschung und 30-Tage-Widget. Deutsch/Englisch, optionale Vanilla-JS-Erweiterung sowie sämtliche öffentlichen Dokumentationsdateien. Kein Kampagnenversand und keine Drittanbieter-Anbindung.
 
-### Gebauter Zwischenstand und Prüfung
+### Verifikation
 
-- `a753399` – Scaffold, Composer/Testbench/Workbench, Provider-Registrierung.
-- `fe306fb` – Schema, Modelle, Enums, Factories, Normalisierung, Eindeutigkeit, Kaskaden und Append-only-Modellschutz.
-- `44dde3a` – Live-Tag-Formulare, verschlüsselter Seitenkontext, Varianten, Preview, Escaping und zugängliches HTML. Das Script ist bislang nur der Einbindungspunkt; die Fetch-Erweiterung samt JS-Tests ist noch Task 9.
-- `b1f6ea0` – Subscribe-Endpoint, Validierung, Spam-Schutz, Rate Limits, Tokens, Einwilligungssnapshot und formulargebundene Rückmeldungen ohne JS.
-- `e4d7796` – Bestätigungsmail, tatsächlicher Versandnachweis, Queue/Mailer-Auswahl, GET/POST-Bestätigung und abgelaufene Tokens.
-- `4157157` – Signierte Abmeldeseiten/-aktionen, RFC-8058-POST und erneuter Double Opt-in.
+- Paket: PHP 8.3.30, Laravel 13.40.0, Filament 5.11.2, Core 1.1.0, Testbench 11.3.0.
+- `composer test`: **89 Tests / 582 Assertions**, erfolgreich.
+- `composer format:check`: erfolgreich.
+- `composer analyse`: erfolgreich, ohne Baseline oder neue Fehlerunterdrückungen.
+- `npm test`: **5 jsdom-Tests**, erfolgreich, keine übersprungenen Tests.
+- Composer-Archiv geprüft: interne Dokumente unter `docs/superpowers/**` und `.superpowers/**` sind ausgeschlossen.
+- Lokale Verbraucher-Integration in `~/Sites/leibnizer-dev`: **1 automatisierter Integrationstest / 42 Assertions**, erfolgreich, mit Laravel 13.39.0, Filament 5.11.0 und Core 1.1.0. Path-Repository/Symlink, Require `dev-main`, veröffentlichte Migration, registriertes Panel-Plugin, vollständige Migration der isolierten SQLite-In-Memory-Datenbank, echte veröffentlichte Testseite mit `{{ newsletter:test tag=probe }}`, Signup, Bestätigung über den aus der tatsächlichen Log-Mail extrahierten Link, Abmeldung sowie Filament-Listen/Teilnehmer und Nachweis geprüft. CSRF-Schutz wurde ausdrücklich aktiviert: POST ohne Token liefert 419, POST mit Token funktioniert. Keine Mail-Fakes im Integrationstest und kein externer Mailversand.
+- Die vorgegebene Prüfmatrix wurde vollständig ausgeführt; kein erforderliches Szenario übersprungen oder abgeschwächt. Weitere PHP-/Laravel-Versionskombinationen wurden nicht zusätzlich ausgeführt. Es fand kein manueller Browser-/Screenreader-Durchlauf statt; die UI-Prüfungen erfolgten über den echten Anwendungskernel/Livewire und jsdom.
 
-Letzter vollständig grüner Zwischenstand nach Task 5: `composer test` **53 Tests / 279 Assertions**, `composer format` und `composer analyse` erfolgreich (PHP 8.3.30, Core v1.1.0). Die neu geschriebenen Task-6-Tests sind rot, weil Domain-Events, Prune-Command und Zeitplan noch fehlen. Die vollständige Abschlussmatrix und die lokale Integration wurden nicht durchgeführt. Tests verwenden Mail-Fakes bzw. den Array-Transport; keine externen Mails wurden versendet.
+### Ergänzungen und Ablaufabweichungen
 
-### Ergänzungen gegenüber dem Plan
+- Der verschlüsselte Kontext enthält zusätzlich `consent_snapshot`, damit Änderungen an Listentexten zwischen Darstellung und Absenden keinen falschen Nachweis erzeugen, und `instance` für Rückmeldungen bei mehrfach eingebundenen identischen Formularen. Die vorgegebenen Felder und eine neue zufällige `form_id` pro Darstellung bleiben erhalten.
+- Das statische Script-Flag ist über eine WeakMap an den Request gebunden, damit es auch in langlebigen PHP-Prozessen einmal pro Seite gilt.
+- CSV wird als StreamedResponse ausgegeben, weil die echte Livewire-Download-Prüfung zeigte, dass eine normale Response keinen Dateidownload auslöst.
+- Für die lokale Integration wurde die reale Verbraucher-Anwendung mit einer isolierten SQLite-In-Memory-Datenbank geprüft. Die konfigurierte MySQL-Entwicklungsdatenbank wurde nicht verändert. Ein erster erfolgreicher Anwendungsdurchlauf scheiterte beim Test-Abbau an der bereits vorhandenen Core-Migration `2026_11_01_072027_add_translation_group_to_section_engine_pages_table.php`: SQLite kann `translation_group` nicht entfernen, solange der Index besteht. Keine Änderung daran; der abschließende Test verwendet vollständig `migrate:fresh` und verwirft die flüchtige Datenbank beim Prozessende, ohne fremde Core-Migrationen rückwärts auszuführen. Sämtliche Anwendungsassertions blieben erhalten.
+- Ein anfänglicher Pfadfehler verhinderte den ersten Sicherungslauf. Die zwei Änderungen des darauf folgenden Composer-Dry-Runs an Composer-Konfiguration und Panel wurden gezielt entfernt und der Git-Status mit dem zuvor gelesenen Stand abgeglichen. Danach wurde eine vollständige Dateisicherung angelegt. Der eigentliche Installations-/Integrationstest wurde gegen diese Sicherung ausgeführt und vollständig zurückgesetzt. Die erste Composer-Datei wurde dabei aus ihren ursprünglichen JSON-Werten rekonstruiert; eine mögliche reine Whitespace-Abweichung vor dieser Sicherung lässt sich nicht bytegenau nachweisen.
 
-Der verschlüsselte Formularkontext enthält zusätzlich `consent_snapshot`, damit zwischen Rendern und Absenden geänderte Listentexte den Nachweis nicht verfälschen, und `instance`, damit Rückmeldungen ohne JS auch bei identischen mehrfach eingebundenen Formularen richtig zugeordnet werden. Die vorgegebenen Felder bleiben erhalten; jede Darstellung erzeugt weiterhin eine zufällige `form_id`. Das statische Script-Flag ist über eine WeakMap an den Request gebunden, damit es auch in langlebigen PHP-Prozessen pro Seite gilt. Keine Core- oder Editorial-Änderungen.
+### Rückbau des Verbrauchers
 
-### Noch offene Arbeit
+Temporären Test, veröffentlichte Newsletter-Migration und Paket-Symlink entfernt. Composer-Dateien, Composer-Autoload-/Installed-Metadaten, Panel-Datei, Paket-/Service-Caches, kompilierte Views, Logs und PHPUnit-Cache aus der Sicherung wiederhergestellt. Danach `git status --porcelain` identisch zur gesicherten Ausgangslage; Prüfsummen sämtlicher erfassten getrackten/ungetrackten Dateien sowie der gesicherten Laufzeitverzeichnisse identisch. Vorhandene lokale Änderungen und Asset-Symlinks wurden beibehalten. Keine Testdaten in MySQL; die Testdatenbank war ausschließlich `:memory:`.
 
-Blockierende Lifecycle-Schnittstelle klären; Task 6 fertigstellen; Tasks 7–8 Filament und Exporte/Widget; Task 9 vollständige Übersetzungen und Progressive Enhancement mit JS-Tests; Task 10 öffentliche Dokumentation; Task 11 vollständige Prüfmatrix und vollständig zurückgerollte lokale Integration. Die aktuellen Commits sind ein Zwischenstand und kein Release.
+### Offene Punkte und Übergabe an Claude
 
-### Später benötigte Verbraucheränderungen (noch nicht ausgeführt)
+Keine offenen Implementierungsblocker. Die Prüfung gegen **Review Focus** wurde wie beauftragt nicht durchgeführt und bleibt bei Claude. Der oben genannte bestehende SQLite-Rollbackfehler gehört zum Core/Verbraucher und wurde nicht behoben. Die Retention löscht entsprechend dem Plan nur alte Pending-Abonnements mit ihren Ereignissen; verbleibende Teilnehmer-Stammdatensätze werden erst über Erasure gelöscht. Diese Grenze ist in `docs/privacy.md` ausdrücklich dokumentiert.
 
-Nach Fertigstellung für den lokalen Integrationstest: Composer-Path-Repository `../section-engine-newsletter` mit Symlink und Require `tok3/section-engine-newsletter:dev-main`; Core `^1.1.0` und Filament 5 müssen vorhanden sein. Im vorhandenen Filament-Panel zusätzlich `Tok3\SectionEngineNewsletter\SectionEngineNewsletterPlugin::make()` registrieren. Paketmigrationen mit `php artisan vendor:publish --tag=section-engine-newsletter-migrations` veröffentlichen und `php artisan migrate` ausführen. Für den lokalen Test `MAIL_MAILER=log` setzen; für den späteren Betrieb den Laravel-Mailer konfigurieren und den Laravel-Scheduler (`php artisan schedule:run` minütlich) betreiben; bei konfigurierter Queue einen Worker starten. Listen und deren Einwilligungstexte vor Einbindung anlegen. Der geplante Prune-Command und die Admin-Ressourcen fehlen im Zwischenstand noch.
+### Exakte spätere Verbraucheränderungen
 
-`~/Sites/leibnizer-dev` wurde ausschließlich gelesen. Seine vorhandenen Änderungen wurden weder verändert noch zurückgesetzt; Task 11 wurde nicht begonnen. Kein Push, kein Tag.
+Nach der separaten Review die private Composer-Quelle hinzufügen und `tok3/section-engine-newsletter` in einer verfügbaren geprüften Version anfordern. Für erneute lokale Tests das Path-Repository `../section-engine-newsletter` mit `options.symlink=true` und `composer require tok3/section-engine-newsletter:dev-main` verwenden. Core `^1.1.0`, Filament 5 und PHP 8.3+ voraussetzen. Im vorhandenen Panel zusätzlich `Tok3\SectionEngineNewsletter\SectionEngineNewsletterPlugin::make()` registrieren. `php artisan vendor:publish --tag=section-engine-newsletter-migrations` und `php artisan migrate` ausführen. Optional Konfiguration/Views/Übersetzungen veröffentlichen. Lokal `MAIL_MAILER=log`; später den tatsächlichen Laravel-Mailer, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` und `APP_URL` konfigurieren. Falls `section-engine-newsletter.queue` gesetzt wird, den Worker für diese Verbindung betreiben. Den Laravel-Scheduler minütlich über `php artisan schedule:run` ausführen. Aktive Listen mit Einwilligungstext mindestens für `default_locale` anlegen, dann die Live-Tags einbinden. Verbraucher benötigen keinen npm- oder Build-Schritt.
+
+Alle Änderungen bleiben lokal auf `main`. Kein Push, kein Tag.
