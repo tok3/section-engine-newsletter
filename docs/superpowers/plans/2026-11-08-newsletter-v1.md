@@ -67,9 +67,9 @@
 - [x] Commit `feat: add newsletter schema and models`
 
 ### Task 2 – Live tag provider and form
-- [ ] `NewsletterLiveTagProvider` + Blade views `form/default.blade.php`, `form/compact.blade.php` (Bootstrap 5 classes, publishable), signed context, honeypot, accessible markup, JS include once.
-- [ ] Tests: valid list renders form with decryptable context containing page id/url/locale/tag; tag normalisation; variants; unknown/inactive list (frontend empty, design mode/editor marked); editor preview disabled + hint; insertOptions; output escaping; accessibility attributes present (label `for`, `aria-describedby`, `aria-live` region); renders through core `PageRenderer` with page context.
-- [ ] Commit `feat: render newsletter signup forms via live tags`
+- [x] `NewsletterLiveTagProvider` + Blade views `form/default.blade.php`, `form/compact.blade.php` (Bootstrap 5 classes, publishable), signed context, honeypot, accessible markup, JS include once.
+- [x] Tests: valid list renders form with decryptable context containing page id/url/locale/tag; tag normalisation; variants; unknown/inactive list (frontend empty, design mode/editor marked); editor preview disabled + hint; insertOptions; output escaping; accessibility attributes present (label `for`, `aria-describedby`, `aria-live` region); renders through core `PageRenderer` with page context.
+- [x] Commit `feat: render newsletter signup forms via live tags`
 
 ### Task 3 – Subscribe endpoint
 - [ ] Controller + form request implementing spec "Signup flow" steps 1–3 with Decisions 3–9.

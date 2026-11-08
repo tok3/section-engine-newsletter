@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Tok3\SectionEngineNewsletter\Database\Factories\NewsletterListFactory;
 
+/**
+ * @property string $key
+ * @property string $name
+ * @property array<string, string> $consent_text
+ * @property array<string, string>|null $confirmation_subject
+ * @property array<string, string>|null $confirmation_intro
+ * @property bool $active
+ */
 class NewsletterList extends Model
 {
     /** @use HasFactory<NewsletterListFactory> */
