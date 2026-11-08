@@ -62,9 +62,9 @@
 - [x] Commit `chore: scaffold section engine newsletter package`
 
 ### Task 1 – Schema and models
-- [ ] Migrations, models (`NewsletterList` soft deletes, `Subscriber`, `Subscription`, `SubscriptionEvent` append-only: updating/deleting an event throws), enums, factories.
-- [ ] Tests: uniqueness, cascades, append-only events, email normalisation mutator.
-- [ ] Commit `feat: add newsletter schema and models`
+- [x] Migrations, models (`NewsletterList` soft deletes, `Subscriber`, `Subscription`, `SubscriptionEvent` append-only: updating/deleting an event throws), enums, factories.
+- [x] Tests: uniqueness, cascades, append-only events, email normalisation mutator.
+- [x] Commit `feat: add newsletter schema and models`
 
 ### Task 2 – Live tag provider and form
 - [ ] `NewsletterLiveTagProvider` + Blade views `form/default.blade.php`, `form/compact.blade.php` (Bootstrap 5 classes, publishable), signed context, honeypot, accessible markup, JS include once.

@@ -20,6 +20,11 @@ abstract class TestCase extends Orchestra
         return $providers;
     }
 
+    protected function defineDatabaseMigrations(): void
+    {
+        (require __DIR__.'/../database/migrations/create_section_engine_newsletter_tables.php.stub')->up();
+    }
+
     protected function defineEnvironment($app): void
     {
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
