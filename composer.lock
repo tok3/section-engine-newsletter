@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9320b7a82c7b2690f033d432f5f83e6a",
+    "content-hash": "1a06678a34534e3fa37b37b97de9ee85",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -8170,16 +8170,16 @@
         },
         {
             "name": "tok3/section-engine",
-            "version": "v1.1.0",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:tok3/section-engine.git",
-                "reference": "8aa324d98c4c2b73efe2f09f79e5c53fca60d041"
+                "reference": "1aff1c4850f95b2ca708cfeaa0ebc5e71f9a1b92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tok3/section-engine/zipball/8aa324d98c4c2b73efe2f09f79e5c53fca60d041",
-                "reference": "8aa324d98c4c2b73efe2f09f79e5c53fca60d041",
+                "url": "https://api.github.com/repos/tok3/section-engine/zipball/1aff1c4850f95b2ca708cfeaa0ebc5e71f9a1b92",
+                "reference": "1aff1c4850f95b2ca708cfeaa0ebc5e71f9a1b92",
                 "shasum": ""
             },
             "require": {
@@ -8207,7 +8207,7 @@
                 "MIT"
             ],
             "description": "Section based CMS for Laravel and Filament.",
-            "time": "2026-11-08T16:57:16+00:00"
+            "time": "2026-11-09T16:30:48+00:00"
         },
         {
             "name": "ueberdosis/tiptap-php",

@@ -2,10 +2,11 @@
 
 namespace Tok3\SectionEngineNewsletter\Http\Controllers;
 
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Tok3\SectionEngine\Support\LiveTokenRenderContext;
+use Tok3\SectionEngine\Support\ThemePageResponse;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
 use Tok3\SectionEngineNewsletter\Events\SubscriptionConfirmed;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
@@ -13,9 +14,17 @@ use Tok3\SectionEngineNewsletter\Support\FormContext;
 
 class ConfirmController
 {
-    public function show(Subscription $subscription, string $token): View
+    public function show(Subscription $subscription, string $token, ThemePageResponse $themePage): Response
     {
-        $this->validateToken($subscription, $token);
+        if (! $this->validToken($subscription, $token)) {
+            return $this->resultPage(
+                $themePage,
+                __('section-engine-newsletter::newsletter.invalid_confirmation', [], $subscription->source_locale),
+                $subscription->source_locale,
+                404,
+            );
+        }
+
         $expired = $subscription->confirmation_expires_at?->isPast() ?? true;
         $form = null;
         if ($expired) {
@@ -24,19 +33,52 @@ class ConfirmController
             $form = view('section-engine-newsletter::form.default', [
                 'list' => $subscription->list, 'data' => $data, 'encryptedContext' => $context->encrypt($data), 'preview' => false,
                 'variant' => 'default', 'includeScript' => false, 'consent' => FormContext::localized($subscription->list->consent_text, $subscription->source_locale),
-                'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox'), 'feedback' => [],
+                'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox', [], $subscription->source_locale), 'feedback' => [],
             ])->render();
         }
 
-        return view('section-engine-newsletter::confirm', compact('subscription', 'token', 'expired', 'form'));
+        $html = view('section-engine-newsletter::pages.confirm', [
+            'subscription' => $subscription,
+            'token' => $token,
+            'expired' => $expired,
+            'form' => $form,
+            'title' => $expired
+                ? __('section-engine-newsletter::newsletter.expired_title', [], $subscription->source_locale)
+                : __('section-engine-newsletter::newsletter.confirm_title', [], $subscription->source_locale),
+            'expiredMessage' => __('section-engine-newsletter::newsletter.expired', [], $subscription->source_locale),
+            'confirmLabel' => __('section-engine-newsletter::newsletter.confirm_button', [], $subscription->source_locale),
+        ])->render();
+
+        return $themePage->make(
+            $expired
+                ? __('section-engine-newsletter::newsletter.expired_title', [], $subscription->source_locale)
+                : __('section-engine-newsletter::newsletter.confirm_title', [], $subscription->source_locale),
+            $html,
+            $subscription->source_locale,
+            ['status' => $expired ? 410 : 200, 'robots' => 'noindex, nofollow'],
+        );
     }
 
-    public function confirm(Request $request, Subscription $subscription, string $token): View
+    public function confirm(Request $request, Subscription $subscription, string $token, ThemePageResponse $themePage): Response
     {
-        return DB::transaction(function () use ($request, $subscription, $token): View {
+        return DB::transaction(function () use ($request, $subscription, $token, $themePage): Response {
             $subscription = Subscription::query()->lockForUpdate()->findOrFail($subscription->id);
-            $this->validateToken($subscription, $token);
-            abort_if($subscription->confirmation_expires_at?->isPast() ?? true, 410, __('section-engine-newsletter::newsletter.expired'));
+            if (! $this->validToken($subscription, $token)) {
+                return $this->resultPage(
+                    $themePage,
+                    __('section-engine-newsletter::newsletter.invalid_confirmation', [], $subscription->source_locale),
+                    $subscription->source_locale,
+                    404,
+                );
+            }
+            if ($subscription->confirmation_expires_at?->isPast() ?? true) {
+                return $this->resultPage(
+                    $themePage,
+                    __('section-engine-newsletter::newsletter.expired', [], $subscription->source_locale),
+                    $subscription->source_locale,
+                    410,
+                );
+            }
             if ($subscription->status === SubscriptionStatus::Pending) {
                 $subscription->update(['status' => SubscriptionStatus::Confirmed, 'confirmed_at' => now(), 'confirmed_ip' => $request->ip(), 'confirmed_user_agent' => $request->userAgent()]);
                 $subscription->events()->create([
@@ -46,13 +88,26 @@ class ConfirmController
                 DB::afterCommit(fn () => SubscriptionConfirmed::dispatch($subscription));
             }
 
-            return view('section-engine-newsletter::result', ['message' => __('section-engine-newsletter::newsletter.confirmed')]);
+            return $this->resultPage(
+                $themePage,
+                __('section-engine-newsletter::newsletter.confirmed', [], $subscription->source_locale),
+                $subscription->source_locale,
+            );
         });
     }
 
-    private function validateToken(Subscription $subscription, string $token): void
+    private function validToken(Subscription $subscription, string $token): bool
     {
-        abort_unless(hash_equals($subscription->confirmation_token_hash ?? '', hash('sha256', $token)), 404);
-        app()->setLocale($subscription->source_locale);
+        return hash_equals($subscription->confirmation_token_hash ?? '', hash('sha256', $token));
+    }
+
+    private function resultPage(ThemePageResponse $themePage, string $message, string $locale, int $status = 200): Response
+    {
+        return $themePage->make(
+            $message,
+            view('section-engine-newsletter::pages.result', compact('message'))->render(),
+            $locale,
+            ['status' => $status, 'robots' => 'noindex, nofollow'],
+        );
     }
 }

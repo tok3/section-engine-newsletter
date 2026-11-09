@@ -3,6 +3,8 @@
 namespace Tok3\SectionEngineNewsletter\Tests;
 
 use Filament\Support\SupportServiceProvider;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Tok3\SectionEngine\SectionEngineServiceProvider;
@@ -10,6 +12,14 @@ use Tok3\SectionEngineNewsletter\SectionEngineNewsletterServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->app['view']->addNamespace('newsletter-tests', __DIR__.'/Fixtures/views');
+        config(['section-engine.theme.view' => 'newsletter-tests::theme']);
+    }
+
     protected function getPackageProviders($app): array
     {
         $providers = [LivewireServiceProvider::class, SupportServiceProvider::class, SectionEngineServiceProvider::class];
@@ -23,6 +33,19 @@ abstract class TestCase extends Orchestra
     protected function defineDatabaseMigrations(): void
     {
         (require __DIR__.'/../database/migrations/create_section_engine_newsletter_tables.php.stub')->up();
+        Schema::create('section_engine_menu_items', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('page_id')->nullable();
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->string('name');
+            $table->string('link_type')->default('page');
+            $table->string('slug')->nullable();
+            $table->string('type')->default('header');
+            $table->string('target')->default('_self');
+            $table->string('lang')->default('de');
+            $table->unsignedInteger('sort')->default(0);
+            $table->timestamps();
+        });
     }
 
     protected function defineEnvironment($app): void

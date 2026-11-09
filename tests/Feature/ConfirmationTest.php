@@ -40,9 +40,10 @@ class ConfirmationTest extends SubscribeTest
         $this->postJson('/newsletter/subscribe', $this->formPayload())->assertOk();
         $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
         $url = '/newsletter/confirm/'.$mail->subscriptionId.'/'.$mail->token;
-        $this->get($url)->assertOk()->assertSee('method="post"', false);
+        $this->get($url)->assertOk()->assertSee('data-test-theme-layout', false)->assertSee('<meta name="robots" content="noindex, nofollow">', false)->assertSee('method="post"', false);
         $this->assertSame(SubscriptionStatus::Pending, Subscription::first()->status);
-        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::9'])->withHeader('User-Agent', 'Confirm browser')->post($url)->assertOk();
+        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::9'])->withHeader('User-Agent', 'Confirm browser')->post($url)
+            ->assertOk()->assertSee('data-test-theme-layout', false)->assertSee('<meta name="robots" content="noindex, nofollow">', false);
         $subscription = Subscription::first();
         $this->assertSame(SubscriptionStatus::Confirmed, $subscription->status);
         $this->assertSame('2001:db8::9', $subscription->confirmed_ip);
@@ -56,11 +57,12 @@ class ConfirmationTest extends SubscribeTest
         Mail::fake();
         $this->postJson('/newsletter/subscribe', $this->formPayload())->assertOk();
         $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
-        $this->post('/newsletter/confirm/'.$mail->subscriptionId.'/wrong')->assertNotFound();
+        $this->get('/newsletter/confirm/'.$mail->subscriptionId.'/wrong')->assertNotFound()->assertSee('data-test-theme-layout', false);
+        $this->post('/newsletter/confirm/'.$mail->subscriptionId.'/wrong')->assertNotFound()->assertSee('data-test-theme-layout', false);
         $this->travel(49)->hours();
         $url = '/newsletter/confirm/'.$mail->subscriptionId.'/'.$mail->token;
-        $this->get($url)->assertOk()->assertSee('name="context"', false)->assertSee('expired');
-        $this->post($url)->assertStatus(410);
+        $this->get($url)->assertStatus(410)->assertSee('data-test-theme-layout', false)->assertSee('name="context"', false)->assertSee('expired');
+        $this->post($url)->assertStatus(410)->assertSee('data-test-theme-layout', false)->assertSee('<meta name="robots" content="noindex, nofollow">', false);
         $this->assertSame(SubscriptionStatus::Pending, Subscription::first()->status);
     }
 
