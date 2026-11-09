@@ -35,8 +35,9 @@ Das Paket liefert neutrale Styles ohne Framework-Abhängigkeit inline aus, einma
 | `--sen-radius` | `.375rem` | Eckenradius |
 | `--sen-gap` | `.75rem` | Abstand zwischen Feldern |
 | `--sen-padding` | `.625rem .75rem` | Innenabstand von Eingaben und Button |
-| `--sen-button-bg` | `currentColor` | Button-Hintergrund |
-| `--sen-button-color` | `Canvas` | Button-Textfarbe |
+| `--sen-button-bg` | `transparent` | Button-Hintergrund; standardmäßig als Outline-Button |
+| `--sen-button-color` | `currentColor` | Button-Textfarbe aus dem Website-Theme |
+| `--sen-button-hover-bg` | nicht gesetzt | Optionaler Hover-Hintergrund; sonst 8 % der Textfarbe auf transparentem Grund |
 | `--sen-focus` | `2px solid currentColor` | sichtbarer Fokusrahmen |
 | `--sen-max-width` | `32rem` | maximale Formularbreite |
 
@@ -46,14 +47,27 @@ Die Paketstyles lassen sich nach Veröffentlichung der Konfiguration vollständi
 'styles' => false,
 ```
 
-Ein mögliches Tailwind-Override in der Anwendungs-CSS:
+Ein gefüllter Button lässt sich ausschließlich über die Variablen konfigurieren, zum Beispiel in normalem CSS:
+
+```css
+.newsletter-signup .sen-newsletter {
+    --sen-button-bg: #18181b;
+    --sen-button-color: #fff;
+    --sen-button-hover-bg: #27272a;
+    --sen-border: 1px solid #18181b;
+}
+```
+
+Ein mögliches Tailwind-4-Override in der Anwendungs-CSS verwendet die Theme-Variablen statt der Tailwind-3-Funktion `theme()`:
 
 ```css
 @layer components {
     .sen-newsletter {
-        --sen-button-bg: theme(colors.zinc.900);
-        --sen-button-color: theme(colors.white);
-        --sen-focus: 2px solid theme(colors.sky.600);
+        --sen-button-bg: var(--color-zinc-900);
+        --sen-button-color: var(--color-white);
+        --sen-button-hover-bg: var(--color-zinc-800);
+        --sen-border: 1px solid var(--color-zinc-900);
+        --sen-focus: 2px solid var(--color-sky-600);
         @apply text-zinc-900 dark:text-zinc-100;
     }
 

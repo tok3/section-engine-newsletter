@@ -5,8 +5,9 @@
     --sen-radius: .375rem;
     --sen-gap: .75rem;
     --sen-padding: .625rem .75rem;
-    --sen-button-bg: currentColor;
-    --sen-button-color: Canvas;
+    /* Avoid currentColor background tokens: they resolve after the button's own color is applied. */
+    --sen-button-bg: transparent;
+    --sen-button-color: currentColor;
     --sen-focus: 2px solid currentColor;
     --sen-max-width: 32rem;
     color: var(--sen-color);
@@ -72,6 +73,9 @@
     padding: var(--sen-padding);
     text-align: center;
 }
+:where(.sen-newsletter__button:hover) {
+    background: var(--sen-button-hover-bg, transparent);
+}
 :where(.sen-newsletter__input:focus-visible, .sen-newsletter__checkbox:focus-visible, .sen-newsletter__button:focus-visible, .sen-newsletter a:focus-visible, .sen-newsletter__message:focus-visible) {
     outline: var(--sen-focus);
     outline-offset: 3px;
@@ -116,6 +120,9 @@
 @supports (color: color-mix(in srgb, currentColor 55%, transparent)) {
     :where(.sen-newsletter) {
         --sen-border: 1px solid color-mix(in srgb, currentColor 55%, transparent);
+    }
+    :where(.sen-newsletter__button:hover) {
+        background: var(--sen-button-hover-bg, color-mix(in srgb, currentColor 8%, transparent));
     }
 }
 @media (max-width: 36rem) {

@@ -158,4 +158,41 @@ class FormTest extends TestCase
             $this->assertStringNotContainsString($bootstrapClass, $html);
         }
     }
+
+    public function test_button_styles_have_visible_outlined_defaults(): void
+    {
+        NewsletterList::factory()->create(['key' => 'news']);
+        $html = $this->render();
+        preg_match('/<style data-sen-newsletter-styles>(.*?)<\/style>/s', $html, $styleMatch);
+        $css = $styleMatch[1] ?? '';
+        $this->assertNotSame('', $css);
+
+        preg_match('/:where\(\.sen-newsletter\)\s*\{([^}]*)\}/s', $css, $defaultsMatch);
+        preg_match_all('/(--[a-z-]+)\s*:\s*([^;]+);/', $defaultsMatch[1] ?? '', $defaultDeclarations, PREG_SET_ORDER);
+        $defaults = collect($defaultDeclarations)->mapWithKeys(fn (array $declaration): array => [$declaration[1] => trim($declaration[2])]);
+
+        $this->assertSame('transparent', $defaults['--sen-button-bg']);
+        $this->assertSame('currentColor', $defaults['--sen-button-color']);
+        $this->assertNotSame('Canvas', $defaults['--sen-button-color']);
+
+        preg_match('/:where\(\.sen-newsletter__button\)\s*\{([^}]*)\}/s', $css, $buttonMatch);
+        preg_match_all('/([a-z-]+)\s*:\s*([^;]+);/', $buttonMatch[1] ?? '', $buttonDeclarations, PREG_SET_ORDER);
+        $button = collect($buttonDeclarations)->mapWithKeys(fn (array $declaration): array => [$declaration[1] => trim($declaration[2])]);
+
+        $this->assertSame('var(--sen-button-bg)', $button['background']);
+        $this->assertSame('var(--sen-button-color)', $button['color']);
+        $this->assertSame('var(--sen-border)', $button['border']);
+        $this->assertFalse(
+            str_contains($defaults['--sen-button-bg'], 'currentColor') && $button['color'] !== 'inherit',
+            'A currentColor background token must not be consumed by a button that overrides its own color.',
+        );
+
+        preg_match('/:where\(\.sen-newsletter__button:hover\)\s*\{([^}]*)\}/s', $css, $hoverMatch);
+        preg_match_all('/([a-z-]+)\s*:\s*([^;]+);/', $hoverMatch[1] ?? '', $hoverDeclarations, PREG_SET_ORDER);
+        $hover = collect($hoverDeclarations)->mapWithKeys(fn (array $declaration): array => [$declaration[1] => trim($declaration[2])]);
+
+        $this->assertSame('var(--sen-button-hover-bg, transparent)', $hover['background']);
+        $this->assertStringContainsString(':where(.sen-newsletter__button:hover)', $css);
+        $this->assertStringContainsString('var(--sen-button-hover-bg, color-mix(in srgb, currentColor 8%, transparent))', $css);
+    }
 }

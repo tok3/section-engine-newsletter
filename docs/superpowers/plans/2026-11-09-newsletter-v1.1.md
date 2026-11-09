@@ -79,3 +79,37 @@ Abschließende Prüfmatrix vor der Übergabe:
 Besonders abgedeckt sind GET/POST-Trennung, 404/410 und `noindex, nofollow`, manipulierte und fremde `source_url` ohne Redirect, listenbezogene Erfolgsmeldungen samt Fokus, einmalige/abschaltbare Null-Spezifitäts-Styles sowie echte HTML- und Plain-Text-Mailparts in Deutsch und Englisch mit und ohne Logo. Keine Datenbank-, Routen- oder bestehende Config-Schnittstelle wurde entfernt oder umbenannt. Es wurde weder gepusht noch getaggt.
 
 Die Prüfung gegen „Review Focus“ ist bewusst offen und wird anschließend von Claude durchgeführt.
+
+## Claude review — 2026-11-09
+
+**Result:** Tasks 1–5 implemented as planned (themed pages, safe return to source page, mail, docs; `SafeSourceUrl` rejects foreign hosts, protocol-relative URLs, credentials, control characters and backslashes). JS suite re-run by Claude: 7/7. PHP not re-run by Claude.
+
+**One blocking defect, caused by the plan (Claude's error), must be fixed before release:**
+
+### Defect: default button is invisible
+
+Plan Decision 4 set `--sen-button-bg: currentColor` and `--sen-button-color: Canvas`. `currentColor` inside a custom property is resolved on the element where it is used. On the button, `color` is `Canvas`, so `background: var(--sen-button-bg)` and the border (`var(--sen-border)` with `currentColor`) also become `Canvas`: text, background and border share one colour, the button is invisible. jsdom does not compute this, so the tests passed.
+
+### Task 6 – Visible neutral default button
+
+- [x] Default button is **outlined**, never colour-inverted: `--sen-button-bg: transparent`, `--sen-button-color: currentColor` (on the button this equals the inherited page text colour). Border via `--sen-border` then follows the page text colour. Hover: subtle background via `color-mix(in srgb, currentColor 8%, transparent)` with fallback `transparent`.
+- [x] A filled button stays possible purely through the variables (documented example).
+- [x] Never put `currentColor` into a variable that is consumed on an element whose own `color` is overridden. Add a short comment in the stylesheet explaining this.
+- [x] Docs `docs/embedding.md`: update the variable table; replace the Tailwind 3 `theme(colors.…)` example by Tailwind 4 theme variables (e.g. `var(--color-zinc-900)`) plus a plain-CSS example.
+- [x] Tests: stylesheet contains the outlined defaults; no `Canvas` as default button colour; a browser-level check is not available in jsdom, so add a test that parses the stylesheet and asserts `--sen-button-bg` default is `transparent` and the button rule does not set `color` to a value different from the one used for `--sen-button-bg`.
+- [x] Manual check (report result): render the form on an unstyled page, a Bootstrap page and in `~/Sites/leibnizer-dev` (local, uncommitted, path repository, revert afterwards) – input border, checkbox, button text and border visible; focus outline visible.
+- [x] Amend release: keep `## 1.1.0` in CHANGELOG (not yet tagged), commit `fix: visible neutral default newsletter button`. No push, no tag.
+
+### Task 6 addendum – mail links always from APP_URL
+
+- [ ] Confirmation (and later unsubscribe) links in mails are built from `config('app.url')`, never from the current request host. Today `route()` in `ConfirmSubscriptionMail` uses the request host when sent synchronously, but `APP_URL` when sent from a queue worker – inconsistent, and it diverges from `SafeSourceUrl`, which compares against `APP_URL`. Generate the URL with the app root (e.g. temporarily `URL::forceRootUrl(config('app.url'))` around the route call, restored afterwards, or `rtrim(config('app.url'), '/').route(..., absolute: false)`).
+- [ ] Tests: request on host A with `APP_URL` = host B → mail link uses host B, sync and queued; root URL of the running request is unchanged afterwards.
+- [ ] Docs `installation.md`: `APP_URL` must be the public address of the site; mail links and the return-to-source check depend on it.
+
+## Übergabe Task 6 — 2026-11-09
+
+Der neutrale Standard-Button ist als sichtbarer Outline-Button umgesetzt; ein gefüllter Zustand einschließlich Hover bleibt ausschließlich über CSS-Variablen konfigurierbar. Der neue Stylesheet-Regressionstest wurde zuerst gegen den bisherigen `currentColor`-Hintergrund rot ausgeführt und deckt Defaults, sichere Button-Regeln, Hover-Fallback und `color-mix()` ab. `CHANGELOG.md` bleibt bei `## 1.1.0 - 2026-11-09`.
+
+Die manuelle Sichtprüfung lief in `~/Sites/leibnizer-dev` mit dem Paket als lokales Path-Repository auf einer ungestylten Seite, einer Bootstrap-Seite und im Leibnizer-Tailwind-Theme. Auf allen drei Seiten waren Eingaberand, Checkbox, Buttontext und Buttonrand sichtbar; der per Tastatur fokussierte Button zeigte einen 2-px-Outline. Danach wurden Prüfharness und Paketstände vollständig zurückgebaut: `composer.json`, `composer.lock`, `routes/web.php`, Git-Status und Binärdiff stimmen bytegenau mit dem gesicherten Ausgangszustand überein.
+
+Prüfmatrix: `composer test` (113 Tests, 881 Assertions), `npm test` (7/7), `composer format:check` und `composer analyse` (37 Dateien, keine Fehler) sind grün. Es wurde weder gepusht noch getaggt. Das separat aufgeführte Mail-Link-Addendum bleibt außerhalb dieses angeforderten Button-Tasks offen.

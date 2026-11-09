@@ -4,7 +4,7 @@
 
 - Bestätigungs-, Ablauf-, Abmelde- und Ergebnisseiten werden mit korrekten Statuscodes und `noindex, nofollow` im konfigurierten Section-Engine-Theme dargestellt.
 - Nach erfolgreicher Bestätigung erfolgt ausschließlich für lokale Herkunfts-URLs die sichere Rückleitung zum passenden Newsletter-Formular mit fokussierter Erfolgsmeldung.
-- Neutrale, barrierefreie `sen-`-Formularstyles ohne Framework-Abhängigkeit, einmal pro Seite, abschaltbar und durch Theme-CSS mit null Spezifität überschreibbar.
+- Neutrale, barrierefreie `sen-`-Formularstyles mit sichtbarem Outline-Button, ohne Framework-Abhängigkeit, einmal pro Seite, abschaltbar und durch Theme-CSS mit null Spezifität überschreibbar.
 - Laravel-Markdown-Bestätigungsmail mit Branding, optionalem Logo, lokalisiertem Footer, Listenname, URL-Fallback und Plain-Text-Part.
 - Mindestversion von `tok3/section-engine` auf `^1.3.0` angehoben.
 
