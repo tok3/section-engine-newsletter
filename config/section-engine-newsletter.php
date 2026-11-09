@@ -6,6 +6,11 @@ return [
     'mailer' => null,
     'queue' => null,
     'from' => ['address' => null, 'name' => null],
+    'mail' => [
+        'brand_name' => config('app.name'),
+        'logo_url' => null,
+        'footer' => null,
+    ],
     'confirmation_ttl_hours' => 48,
     'context_ttl_hours' => 168,
     'resend_cooldown_minutes' => 10,

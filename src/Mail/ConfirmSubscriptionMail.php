@@ -26,12 +26,27 @@ class ConfirmSubscriptionMail extends Mailable implements ShouldBeEncrypted
         $locale = $this->locale ?? $subscription->source_locale;
         $subject = FormContext::localized($subscription->list->confirmation_subject, $locale, __('section-engine-newsletter::newsletter.mail_subject', [], $locale));
         $intro = FormContext::localized($subscription->list->confirmation_intro, $locale, __('section-engine-newsletter::newsletter.mail_intro', [], $locale));
+        $brandName = (string) (config('section-engine-newsletter.mail.brand_name') ?: config('app.name'));
+        $logoUrl = config('section-engine-newsletter.mail.logo_url');
+        $footerConfig = config('section-engine-newsletter.mail.footer');
+        $footer = is_array($footerConfig)
+            ? FormContext::localized($footerConfig, $locale)
+            : (is_string($footerConfig) ? $footerConfig : null);
         $address = config('section-engine-newsletter.from.address') ?: config('mail.from.address');
         $name = config('section-engine-newsletter.from.name') ?: config('mail.from.name');
 
-        return $this->from($address, $name)->subject($subject)->view('section-engine-newsletter::mail.confirm', [
+        return $this->from($address, $name)->subject($subject)->markdown('section-engine-newsletter::mail.confirm', [
+            'brandName' => $brandName,
+            'logoUrl' => is_string($logoUrl) && $logoUrl !== '' ? $logoUrl : null,
+            'listName' => $subscription->list->name,
             'intro' => $intro,
             'confirmationUrl' => route('section-engine-newsletter.confirm.show', ['subscription' => $this->subscriptionId, 'token' => $this->token]),
+            'greeting' => __('section-engine-newsletter::newsletter.mail_greeting', ['brand' => $brandName], $locale),
+            'listText' => __('section-engine-newsletter::newsletter.mail_list', ['list' => $subscription->list->name], $locale),
+            'confirmLabel' => __('section-engine-newsletter::newsletter.confirm_button', [], $locale),
+            'fallbackLabel' => __('section-engine-newsletter::newsletter.mail_fallback', [], $locale),
+            'ignoreNotice' => __('section-engine-newsletter::newsletter.mail_ignore', [], $locale),
+            'footer' => $footer,
         ]);
     }
 
