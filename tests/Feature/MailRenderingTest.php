@@ -2,7 +2,9 @@
 
 namespace Tok3\SectionEngineNewsletter\Tests\Feature;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Mime\Email;
 use Tok3\SectionEngineNewsletter\Mail\ConfirmSubscriptionMail;
@@ -71,5 +73,49 @@ class MailRenderingTest extends TestCase
 
         [$withLogo] = $this->renderMail('en', 'https://brand.example/logo.svg');
         $this->assertStringContainsString('<img src="https://brand.example/logo.svg"', $withLogo);
+    }
+
+    public static function deliveryModes(): array
+    {
+        return [
+            'synchronous mail' => [false],
+            'queued mail' => [true],
+        ];
+    }
+
+    #[DataProvider('deliveryModes')]
+    public function test_confirmation_link_uses_app_url_without_changing_the_request_root(bool $queued): void
+    {
+        config([
+            'app.url' => 'https://public.example/',
+            'queue.default' => 'sync',
+            'queue.connections.sync' => ['driver' => 'sync'],
+        ]);
+        $request = Request::create('https://request-host.example/current');
+        app()->instance('request', $request);
+        URL::setRequest($request);
+
+        $token = str_repeat('u', 64);
+        $subscription = Subscription::factory()->create([
+            'confirmation_token_hash' => hash('sha256', $token),
+            'confirmation_expires_at' => now()->addHour(),
+        ]);
+        $expectedUrl = 'https://public.example/newsletter/confirm/'.$subscription->id.'/'.$token;
+        $requestUrl = 'https://request-host.example/newsletter/confirm/'.$subscription->id.'/'.$token;
+        $mailable = new ConfirmSubscriptionMail($subscription->id, $token, '192.0.2.5', 'Mail URL test');
+        $pendingMail = Mail::mailer()->to('reader@example.org');
+
+        if ($queued) {
+            $pendingMail->queue($mailable->onConnection('sync'));
+        } else {
+            $pendingMail->send($mailable);
+        }
+
+        $sent = Mail::mailer()->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $this->assertInstanceOf(Email::class, $sent);
+        $this->assertStringContainsString($expectedUrl, (string) $sent->getHtmlBody());
+        $this->assertStringContainsString($expectedUrl, (string) $sent->getTextBody());
+        $this->assertStringNotContainsString($requestUrl, (string) $sent->getHtmlBody());
+        $this->assertSame($requestUrl, route('section-engine-newsletter.confirm.show', ['subscription' => $subscription, 'token' => $token]));
     }
 }

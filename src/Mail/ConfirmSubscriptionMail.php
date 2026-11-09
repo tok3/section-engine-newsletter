@@ -34,13 +34,17 @@ class ConfirmSubscriptionMail extends Mailable implements ShouldBeEncrypted
             : (is_string($footerConfig) ? $footerConfig : null);
         $address = config('section-engine-newsletter.from.address') ?: config('mail.from.address');
         $name = config('section-engine-newsletter.from.name') ?: config('mail.from.name');
+        $confirmationUrl = rtrim((string) config('app.url'), '/').route('section-engine-newsletter.confirm.show', [
+            'subscription' => $this->subscriptionId,
+            'token' => $this->token,
+        ], absolute: false);
 
         return $this->from($address, $name)->subject($subject)->markdown('section-engine-newsletter::mail.confirm', [
             'brandName' => $brandName,
             'logoUrl' => is_string($logoUrl) && $logoUrl !== '' ? $logoUrl : null,
             'listName' => $subscription->list->name,
             'intro' => $intro,
-            'confirmationUrl' => route('section-engine-newsletter.confirm.show', ['subscription' => $this->subscriptionId, 'token' => $this->token]),
+            'confirmationUrl' => $confirmationUrl,
             'greeting' => __('section-engine-newsletter::newsletter.mail_greeting', ['brand' => $brandName], $locale),
             'listText' => __('section-engine-newsletter::newsletter.mail_list', ['list' => $subscription->list->name], $locale),
             'confirmLabel' => __('section-engine-newsletter::newsletter.confirm_button', [], $locale),

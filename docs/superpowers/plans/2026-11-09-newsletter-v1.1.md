@@ -102,9 +102,9 @@ Plan Decision 4 set `--sen-button-bg: currentColor` and `--sen-button-color: Can
 
 ### Task 6 addendum – mail links always from APP_URL
 
-- [ ] Confirmation (and later unsubscribe) links in mails are built from `config('app.url')`, never from the current request host. Today `route()` in `ConfirmSubscriptionMail` uses the request host when sent synchronously, but `APP_URL` when sent from a queue worker – inconsistent, and it diverges from `SafeSourceUrl`, which compares against `APP_URL`. Generate the URL with the app root (e.g. temporarily `URL::forceRootUrl(config('app.url'))` around the route call, restored afterwards, or `rtrim(config('app.url'), '/').route(..., absolute: false)`).
-- [ ] Tests: request on host A with `APP_URL` = host B → mail link uses host B, sync and queued; root URL of the running request is unchanged afterwards.
-- [ ] Docs `installation.md`: `APP_URL` must be the public address of the site; mail links and the return-to-source check depend on it.
+- [x] Confirmation (and later unsubscribe) links in mails are built from `config('app.url')`, never from the current request host. Today `route()` in `ConfirmSubscriptionMail` uses the request host when sent synchronously, but `APP_URL` when sent from a queue worker – inconsistent, and it diverges from `SafeSourceUrl`, which compares against `APP_URL`. Generate the URL with the app root (e.g. temporarily `URL::forceRootUrl(config('app.url'))` around the route call, restored afterwards, or `rtrim(config('app.url'), '/').route(..., absolute: false)`).
+- [x] Tests: request on host A with `APP_URL` = host B → mail link uses host B, sync and queued; root URL of the running request is unchanged afterwards.
+- [x] Docs `installation.md`: `APP_URL` must be the public address of the site; mail links and the return-to-source check depend on it.
 
 ## Übergabe Task 6 — 2026-11-09
 
@@ -112,4 +112,8 @@ Der neutrale Standard-Button ist als sichtbarer Outline-Button umgesetzt; ein ge
 
 Die manuelle Sichtprüfung lief in `~/Sites/leibnizer-dev` mit dem Paket als lokales Path-Repository auf einer ungestylten Seite, einer Bootstrap-Seite und im Leibnizer-Tailwind-Theme. Auf allen drei Seiten waren Eingaberand, Checkbox, Buttontext und Buttonrand sichtbar; der per Tastatur fokussierte Button zeigte einen 2-px-Outline. Danach wurden Prüfharness und Paketstände vollständig zurückgebaut: `composer.json`, `composer.lock`, `routes/web.php`, Git-Status und Binärdiff stimmen bytegenau mit dem gesicherten Ausgangszustand überein.
 
-Prüfmatrix: `composer test` (113 Tests, 881 Assertions), `npm test` (7/7), `composer format:check` und `composer analyse` (37 Dateien, keine Fehler) sind grün. Es wurde weder gepusht noch getaggt. Das separat aufgeführte Mail-Link-Addendum bleibt außerhalb dieses angeforderten Button-Tasks offen.
+Prüfmatrix: `composer test` (113 Tests, 881 Assertions), `npm test` (7/7), `composer format:check` und `composer analyse` (37 Dateien, keine Fehler) sind grün. Es wurde weder gepusht noch getaggt. Das separat aufgeführte Mail-Link-Addendum war zu diesem Zeitpunkt offen und wurde anschließend in einer eigenen Übergabe abgeschlossen.
+
+## Übergabe Task 6 Addendum — 2026-11-09
+
+Bestätigungslinks werden nun für direkte und eingereihte Mails aus `APP_URL` plus relativem Named-Route-Pfad aufgebaut; der aktuelle Request-Host und der globale URL-Generator bleiben unverändert. Der neue Test lief zuerst für beide Versandwege rot und anschließend grün. `docs/installation.md` beschreibt `APP_URL` als verbindliche öffentliche Basis für Mail-Links und den Return-to-Source-Abgleich. Die Prüfmatrix ist grün: `composer test` (115 Tests, 891 Assertions), `npm test` (7/7), `composer format:check` und `composer analyse` (37 Dateien, keine Fehler). `CHANGELOG.md` bleibt bei 1.1.0; es wurde weder gepusht noch getaggt.

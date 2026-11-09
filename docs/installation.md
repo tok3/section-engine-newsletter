@@ -40,7 +40,7 @@ MAIL_MAILER=log
 
 Unter Laravel 11+ heißt die Variable `MAIL_MAILER`, nicht das ältere `MAIL_DRIVER`.
 
-Ein echter Betrieb benötigt einen funktionierenden Laravel-Mailer und korrekte `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` und `APP_URL`. `APP_URL` bestimmt bei Queue-Versand die Linkbasis. Log-Mails enthalten Bestätigungslinks und müssen entsprechend geschützt werden.
+Ein echter Betrieb benötigt einen funktionierenden Laravel-Mailer und korrekte `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` und `APP_URL`. `APP_URL` muss die öffentliche Adresse der Website enthalten. Alle Links in Newsletter-Mails verwenden diese Basis unabhängig davon, ob die Mail synchron oder durch einen Queue-Worker versendet wird; der Host der auslösenden HTTP-Anfrage wird dafür nicht übernommen. Auch die sichere Rückleitung nach einer Bestätigung vergleicht die Herkunft mit `APP_URL`. Log-Mails enthalten Bestätigungslinks und müssen entsprechend geschützt werden.
 
 ```sh
 php artisan vendor:publish --tag=section-engine-newsletter-config
