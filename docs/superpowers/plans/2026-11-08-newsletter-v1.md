@@ -194,3 +194,7 @@ Ohne konfigurierte Queue wird der Versand nach dem Commit einmalig für die Anwe
 Test-first: sechs neue Regressionstests zunächst mit frühem Transportaufruf bzw. HTTP 500 rot, danach grün. Die Tests trennen `Kernel::handle()` von `terminate()` und prüfen JSON/Redirects bei neuen, offenen, bestätigten und rate-limitierten Anmeldungen mit tatsächlich werfendem Mailtransport, außerdem Queue-Backend-Ausfall, Fehlermeldung und unveränderte IP-/User-Agent-Nachweise. Cookies werden beim Headervergleich ausgenommen; der naturgemäß anfrageabhängige HTTP-`Date`-Wert wird separat auf sein Format geprüft und für den Vergleich normalisiert.
 
 Vollständige Prüfmatrix erfolgreich: `composer test` **95 Tests / 722 Assertions**, `composer format:check`, `composer analyse` und `npm test` **5/5** ohne übersprungene Tests. Keine Core-/Editorial-/Verbraucheränderung. Kein Push, kein Tag.
+
+## Claude re-review — 2026-11-09 (commit ec7b7a0)
+
+**Result: approved for release v1.0.0.** Without queue the mail is sent in a terminating callback after the response; queue and mail failures are reported and never change the response. Docs recommend a queue in production. JS suite re-run by Claude: 5/5. Non-blocking style note: the once-guard uses a `static` variable inside the closure; a captured `use (&$attempted)` flag would be more explicit. Behaviour is covered by the suite.
