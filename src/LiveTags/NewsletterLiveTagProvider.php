@@ -11,8 +11,8 @@ use Tok3\SectionEngineNewsletter\Support\FormContext;
 
 class NewsletterLiveTagProvider implements LiveTagProvider
 {
-    /** @var \WeakMap<Request, bool>|null */
-    private static ?\WeakMap $scripts = null;
+    /** @var \WeakMap<Request, array{script: bool, styles: bool}>|null */
+    private static ?\WeakMap $assets = null;
 
     public function prefix(): string
     {
@@ -33,17 +33,21 @@ class NewsletterLiveTagProvider implements LiveTagProvider
         }
         $variants = config('section-engine-newsletter.views.variants');
         $variant = array_key_exists($tag->option('variant', 'default'), $variants) ? $tag->option('variant', 'default') : 'default';
-        $scripts = self::$scripts ??= new \WeakMap;
-        $includeScript = ! $context->editorPreview && ! isset($scripts[request()]);
-        if ($includeScript) {
-            $scripts[request()] = true;
-        }
+        $assets = self::$assets ??= new \WeakMap;
+        $state = $assets[request()] ?? ['script' => false, 'styles' => false];
+        $includeScript = ! $context->editorPreview && ! $state['script'];
+        $includeStyles = (bool) config('section-engine-newsletter.styles', true) && ! $state['styles'];
+        $assets[request()] = [
+            'script' => $state['script'] || $includeScript,
+            'styles' => $state['styles'] || $includeStyles,
+        ];
         if (! $context->editorPreview && session('section-engine-newsletter.confirmed') === $list->key) {
             return view('section-engine-newsletter::form.confirmed', [
                 'locale' => $context->locale,
                 'message' => __('section-engine-newsletter::newsletter.confirmed', [], $context->locale),
                 'autofocus' => $includeScript,
                 'includeScript' => $includeScript,
+                'includeStyles' => $includeStyles,
             ])->render();
         }
 
@@ -64,6 +68,7 @@ class NewsletterLiveTagProvider implements LiveTagProvider
         return view($variants[$variant], ['feedback' => $feedback,
             'list' => $list, 'data' => $data, 'encryptedContext' => $formContext->encrypt($data),
             'preview' => $context->editorPreview, 'variant' => $variant, 'includeScript' => $includeScript,
+            'includeStyles' => $includeStyles,
             'consent' => FormContext::localized($list->consent_text, $context->locale),
             'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox', [], $context->locale),
         ])->render();

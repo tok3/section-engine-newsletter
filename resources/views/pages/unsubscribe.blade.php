@@ -1,3 +1,4 @@
+@if(config('section-engine-newsletter.styles', true))@include('section-engine-newsletter::form.styles')@endif
 <section class="sen-newsletter sen-newsletter--page">
     <h1>{{ $title }}</h1>
     <form method="post" action="{{ request()->fullUrl() }}">

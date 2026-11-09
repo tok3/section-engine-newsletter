@@ -35,7 +35,7 @@ class ConfirmController
             $form = view('section-engine-newsletter::form.default', [
                 'list' => $subscription->list, 'data' => $data, 'encryptedContext' => $context->encrypt($data), 'preview' => false,
                 'variant' => 'default', 'includeScript' => false, 'consent' => FormContext::localized($subscription->list->consent_text, $subscription->source_locale),
-                'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox', [], $subscription->source_locale), 'feedback' => [],
+                'includeStyles' => false, 'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox', [], $subscription->source_locale), 'feedback' => [],
             ])->render();
         }
 

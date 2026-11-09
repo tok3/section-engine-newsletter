@@ -54,9 +54,9 @@ class FormTest extends TestCase
     public function test_variants_fallback_and_output_escape(): void
     {
         NewsletterList::factory()->create(['key' => 'news', 'consent_text' => ['de' => '<script>alert(1)</script>']]);
-        $this->assertStringContainsString('newsletter-form--compact', $this->render(options: ['variant' => 'compact']));
+        $this->assertStringContainsString('sen-newsletter--compact', $this->render(options: ['variant' => 'compact']));
         $html = $this->render(options: ['variant' => '../../evil']);
-        $this->assertStringContainsString('newsletter-form--default', $html);
+        $this->assertStringContainsString('sen-newsletter--default', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);
         $this->assertStringNotContainsString('<script>alert', $html);
     }
@@ -108,5 +108,54 @@ class FormTest extends TestCase
     {
         NewsletterList::factory()->create(['key' => 'news']);
         $this->assertSame(1, substr_count($this->render().$this->render(), 'data-newsletter-enhancement'));
+    }
+
+    public function test_neutral_styles_and_enhancement_are_each_emitted_once_per_page(): void
+    {
+        NewsletterList::factory()->create(['key' => 'news']);
+
+        $html = $this->render().$this->render();
+
+        $this->assertSame(1, substr_count($html, 'data-sen-newsletter-styles'));
+        $this->assertSame(1, substr_count($html, 'data-newsletter-enhancement'));
+    }
+
+    public function test_neutral_styles_can_be_disabled(): void
+    {
+        config(['section-engine-newsletter.styles' => false]);
+        NewsletterList::factory()->create(['key' => 'news']);
+
+        $this->assertStringNotContainsString('data-sen-newsletter-styles', $this->render());
+    }
+
+    public function test_neutral_styles_use_only_zero_specificity_selectors(): void
+    {
+        NewsletterList::factory()->create(['key' => 'news']);
+        $html = $this->render();
+        preg_match('/<style data-sen-newsletter-styles>(.*?)<\/style>/s', $html, $match);
+        $this->assertNotEmpty($match[1] ?? null);
+
+        foreach (explode("\n", $match[1]) as $line) {
+            $selector = trim($line);
+            if (str_ends_with($selector, '{') && ! str_starts_with($selector, '@')) {
+                $this->assertStringStartsWith(':where(', $selector);
+            }
+        }
+    }
+
+    public function test_form_uses_prefixed_bem_classes_and_keeps_accessibility_relationships(): void
+    {
+        NewsletterList::factory()->create(['key' => 'news']);
+        $html = $this->render(options: ['variant' => 'compact']);
+
+        foreach (['sen-newsletter', 'sen-newsletter--compact', 'sen-newsletter__field', 'sen-newsletter__label', 'sen-newsletter__input', 'sen-newsletter__checkbox', 'sen-newsletter__consent', 'sen-newsletter__button', 'sen-newsletter__message', 'sen-newsletter__error'] as $class) {
+            $this->assertStringContainsString($class, $html);
+        }
+        foreach (['<label', 'aria-describedby=', 'role="status"', 'aria-live="polite"'] as $needle) {
+            $this->assertStringContainsString($needle, $html);
+        }
+        foreach (['form-control', 'form-label', 'form-check', 'btn btn-primary', 'mb-3', 'text-danger'] as $bootstrapClass) {
+            $this->assertStringNotContainsString($bootstrapClass, $html);
+        }
     }
 }

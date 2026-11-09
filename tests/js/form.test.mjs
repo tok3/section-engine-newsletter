@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 const source = readFileSync(new URL('../../resources/views/form/script.blade.php', import.meta.url), 'utf8').replace(/<\/?script[^>]*>/g, '');
+let styles = '';
+try {
+  styles = readFileSync(new URL('../../resources/views/form/styles.blade.php', import.meta.url), 'utf8').replace(/<\/?style[^>]*>/g, '');
+} catch {}
 function setup(fetch) {
   const form = (id) => `<form data-newsletter-form id="${id}" action="/newsletter/subscribe" data-error-message="Please retry"><input name="context" value="encrypted"><label for="${id}-email">Email</label><input id="${id}-email" name="email" value="a@example.org" aria-describedby="${id}-email-error"><div id="${id}-email-error" data-error="email"></div><input name="consent" type="checkbox"><button type="submit">Subscribe</button><div data-newsletter-status aria-live="polite" tabindex="-1"></div></form>`;
   const dom = new JSDOM(form('first') + form('second') + '<form id="other"></form>', { url: 'http://localhost', runScripts: 'outside-only' });
@@ -58,4 +62,11 @@ test('confirmed notice receives focus when the source page loads', () => {
   dom.window.fetch = async () => {};
   dom.window.eval(source);
   assert.equal(dom.window.document.activeElement, dom.window.document.querySelector('[data-newsletter-confirmed]'));
+});
+test('shipped CSS gives inputs a visible border and buttons a 44px minimum height', () => {
+  const dom = new JSDOM(`<style>${styles}</style><div class="sen-newsletter"><form><label class="sen-newsletter__label" for="email">Email</label><input class="sen-newsletter__input" id="email"><button class="sen-newsletter__button">Subscribe</button></form></div>`, { pretendToBeVisual: true });
+  const input = dom.window.getComputedStyle(dom.window.document.querySelector('input'));
+  const button = dom.window.getComputedStyle(dom.window.document.querySelector('button'));
+  assert.notEqual(input.borderStyle, 'none');
+  assert.ok(Number.parseFloat(button.minHeight) >= 44);
 });
