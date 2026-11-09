@@ -53,3 +53,9 @@ test('inflight submit is not duplicated and old errors are cleared on retry', as
   resolve({ ok: true, json: async () => ({ message: 'OK' }) }); await settle();
   assert.equal(node.hasAttribute('aria-busy'), false);
 });
+test('confirmed notice receives focus when the source page loads', () => {
+  const dom = new JSDOM('<div data-newsletter-confirmed role="status" tabindex="-1" autofocus>Confirmed</div>', { url: 'http://localhost', runScripts: 'outside-only' });
+  dom.window.fetch = async () => {};
+  dom.window.eval(source);
+  assert.equal(dom.window.document.activeElement, dom.window.document.querySelector('[data-newsletter-confirmed]'));
+});

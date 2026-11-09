@@ -10,6 +10,9 @@ class SafeSourceUrl
         if ($sourceUrl === '') {
             return null;
         }
+        if (preg_match('/[\\x00-\\x1F\\x7F\\\\]/', $sourceUrl) === 1) {
+            return null;
+        }
 
         $source = parse_url($sourceUrl);
         if ($source === false || isset($source['user']) || isset($source['pass'])) {
@@ -17,7 +20,11 @@ class SafeSourceUrl
         }
 
         if (! isset($source['scheme']) && ! isset($source['host'])) {
-            return str_starts_with($sourceUrl, '//') ? null : $sourceUrl;
+            if (str_starts_with($sourceUrl, '//')) {
+                return null;
+            }
+
+            return str_starts_with($sourceUrl, '/') ? $sourceUrl : '/'.$sourceUrl;
         }
 
         $application = parse_url((string) config('app.url'));

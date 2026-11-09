@@ -1,5 +1,7 @@
 <script data-newsletter-enhancement>
 (() => {
+    const confirmed = document.querySelector('[data-newsletter-confirmed][autofocus]');
+    if (confirmed) confirmed.focus();
     if (!window.fetch || !window.FormData) return;
     document.addEventListener('submit', async (event) => {
         const form = event.target;

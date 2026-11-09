@@ -33,13 +33,22 @@ class NewsletterLiveTagProvider implements LiveTagProvider
         }
         $variants = config('section-engine-newsletter.views.variants');
         $variant = array_key_exists($tag->option('variant', 'default'), $variants) ? $tag->option('variant', 'default') : 'default';
-        $formContext = app(FormContext::class);
-        $data = $formContext->create($list, $context, $tag->option('tag'));
         $scripts = self::$scripts ??= new \WeakMap;
         $includeScript = ! $context->editorPreview && ! isset($scripts[request()]);
         if ($includeScript) {
             $scripts[request()] = true;
         }
+        if (! $context->editorPreview && session('section-engine-newsletter.confirmed') === $list->key) {
+            return view('section-engine-newsletter::form.confirmed', [
+                'locale' => $context->locale,
+                'message' => __('section-engine-newsletter::newsletter.confirmed', [], $context->locale),
+                'autofocus' => $includeScript,
+                'includeScript' => $includeScript,
+            ])->render();
+        }
+
+        $formContext = app(FormContext::class);
+        $data = $formContext->create($list, $context, $tag->option('tag'));
 
         $feedback = [];
         foreach (session('section-engine-newsletter', []) as $formId => $entry) {

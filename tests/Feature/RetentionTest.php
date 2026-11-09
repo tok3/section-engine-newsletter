@@ -26,8 +26,8 @@ class RetentionTest extends SubscribeTest
         Event::assertDispatchedTimes(SubscriptionRequested::class, 1);
         $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
         $path = '/newsletter/confirm/'.$mail->subscriptionId.'/'.$mail->token;
-        $this->post($path)->assertOk();
-        $this->post($path)->assertOk();
+        $this->post($path)->assertRedirect('http://localhost/example#newsletter-news');
+        $this->post($path)->assertRedirect('http://localhost/example#newsletter-news');
         Event::assertDispatchedTimes(SubscriptionConfirmed::class, 1);
         $subscription = Subscription::first();
         $url = URL::signedRoute('section-engine-newsletter.unsubscribe', ['subscription' => $subscription]);

@@ -2,6 +2,7 @@
 
 namespace Tok3\SectionEngineNewsletter\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,7 @@ use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
 use Tok3\SectionEngineNewsletter\Events\SubscriptionConfirmed;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
 use Tok3\SectionEngineNewsletter\Support\FormContext;
+use Tok3\SectionEngineNewsletter\Support\SafeSourceUrl;
 
 class ConfirmController
 {
@@ -59,9 +61,9 @@ class ConfirmController
         );
     }
 
-    public function confirm(Request $request, Subscription $subscription, string $token, ThemePageResponse $themePage): Response
+    public function confirm(Request $request, Subscription $subscription, string $token, ThemePageResponse $themePage, SafeSourceUrl $safeSourceUrl): Response|RedirectResponse
     {
-        return DB::transaction(function () use ($request, $subscription, $token, $themePage): Response {
+        return DB::transaction(function () use ($request, $subscription, $token, $themePage, $safeSourceUrl): Response|RedirectResponse {
             $subscription = Subscription::query()->lockForUpdate()->findOrFail($subscription->id);
             if (! $this->validToken($subscription, $token)) {
                 return $this->resultPage(
@@ -86,6 +88,12 @@ class ConfirmController
                     'source_url' => $subscription->source_url, 'ip' => $request->ip(), 'user_agent' => $request->userAgent(),
                 ]);
                 DB::afterCommit(fn () => SubscriptionConfirmed::dispatch($subscription));
+            }
+
+            if ($sourceUrl = $safeSourceUrl->get($subscription->source_url)) {
+                $target = preg_replace('/#.*$/', '', $sourceUrl).'#newsletter-'.rawurlencode($subscription->list->key);
+
+                return redirect()->to($target)->with('section-engine-newsletter.confirmed', $subscription->list->key);
             }
 
             return $this->resultPage(
