@@ -2,7 +2,7 @@
 
 ## Composer und Datenbank
 
-PHP 8.3+, Laravel 11–13, Filament 5 und `tok3/section-engine ^1.1.0` sind erforderlich. Composer muss auf beide privaten Paketquellen zugreifen können. Beispiel für einen Entwicklungscheckout im benachbarten Verzeichnis:
+PHP 8.3+, Laravel 11–13, Filament 5 und `tok3/section-engine ^1.3.0` sind erforderlich. Composer muss auf beide privaten Paketquellen zugreifen können. Beispiel für einen Entwicklungscheckout im benachbarten Verzeichnis:
 
 ```json
 {"repositories":[{"type":"path","url":"../section-engine-newsletter","options":{"symlink":true}},{"type":"vcs","url":"git@github.com:tok3/section-engine.git"}]}
@@ -38,6 +38,8 @@ Der Standard-Laravel-Mailer wird benutzt, sofern `section-engine-newsletter.mail
 MAIL_MAILER=log
 ```
 
+Unter Laravel 11+ heißt die Variable `MAIL_MAILER`, nicht das ältere `MAIL_DRIVER`.
+
 Ein echter Betrieb benötigt einen funktionierenden Laravel-Mailer und korrekte `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` und `APP_URL`. `APP_URL` bestimmt bei Queue-Versand die Linkbasis. Log-Mails enthalten Bestätigungslinks und müssen entsprechend geschützt werden.
 
 ```sh
@@ -50,7 +52,14 @@ In `config/section-engine-newsletter.php`:
 'mailer' => null, // null = Laravel-Standard
 'queue' => null,  // null/leer = Versand nach der HTTP-Antwort; sonst Queue-Verbindungsname
 'from' => ['address' => null, 'name' => null], // Laravel mail.from als Standard
+'mail' => [
+    'brand_name' => config('app.name'),
+    'logo_url' => null,
+    'footer' => null, // String oder z. B. ['de' => '…', 'en' => '…']
+],
 ```
+
+Die Bestätigungsmail ist eine Laravel-Markdown-Mail und übernimmt das konfigurierte Laravel-Mail-Theme. `mail.brand_name` benennt den Absender im Inhalt, `mail.logo_url` ergänzt optional ein Logo und `mail.footer` einen allgemeinen oder lokalisierten Footer. Für ein eigenes Mail-Theme können Laravels Mail-Views mit `php artisan vendor:publish --tag=laravel-mail` veröffentlicht und `mail.markdown.theme` beziehungsweise die Theme-CSS der Anwendung angepasst werden.
 
 **Für den Produktionsbetrieb wird eine dauerhafte Queue wie `database` oder `redis` mit laufendem Worker empfohlen.** Eine `sync`-Queue-Verbindung führt Jobs weiterhin unmittelbar aus und bietet diese Entkopplung nicht.
 

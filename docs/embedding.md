@@ -20,15 +20,60 @@ Das erste Argument bezeichnet den Listenschlüssel. `tag` ist eine optionale fre
 
 Ein sichtbares E-Mail-Label, den Einwilligungstext, standardmäßig eine Pflicht-Checkbox und den Anmeldebutton. Nach dem Absenden erscheint immer dieselbe allgemeine Rückmeldung – auch für bereits bekannte Adressen. Eine Bestätigungsmail wird für neue und erneut angemeldete Adressen versendet; bei bereits offenen Anmeldungen gilt standardmäßig eine zehnminütige Wiederholungssperre. Bereits bestätigte Adressen erhalten keine neue Mail.
 
-Der Mail-Link öffnet eine Seite mit Bestätigungsbutton. Erst dieser POST bestätigt das Abonnement. Der Link gilt standardmäßig 48 Stunden; abgelaufene Links bieten ein neues Anmeldeformular an. Eine Abmeldung erfolgt ebenfalls über eine signierte Seite mit POST-Button. Eine erneute Anmeldung benötigt wieder Double Opt-in.
+Der Mail-Link öffnet eine Seite im vorhandenen Website-Theme mit Bestätigungsbutton. Erst dieser POST bestätigt das Abonnement. Danach kehren Besucher zur ursprünglichen Seite zurück, sofern deren Schema und Host zu `APP_URL` passen. Dort ersetzt eine fokussierte Erfolgsmeldung alle Formulare derselben Liste; Formulare anderer Listen bleiben stehen. Bei fehlender oder fremder Herkunft erscheint stattdessen eine Ergebnisseite im Website-Theme. Der Link gilt standardmäßig 48 Stunden; abgelaufene Links zeigen mit HTTP 410 ein neues Anmeldeformular an. Eine Abmeldung erfolgt ebenfalls über eine signierte Theme-Seite mit POST-Button. Eine erneute Anmeldung benötigt wieder Double Opt-in.
 
 Ohne JavaScript funktioniert das Formular über einen Redirect zur eigenen Formularinstanz. Mit JavaScript werden Status und Validierungsfehler im Formular angezeigt und der Fokus auf den Status beziehungsweise das erste fehlerhafte Feld gesetzt. Mehrere Formulare auf einer Seite sind möglich.
 
 ## Gestaltung
 
-Die Views nutzen Bootstrap-5-Klassen; das Paket lädt Bootstrap selbst nicht nach. Das Projekt kann seine vorhandenen Styles verwenden oder die Formularfelder selbst gestalten. Verfügbar sind `.newsletter-form--default` und `.newsletter-form--compact`.
+Das Paket liefert neutrale Styles ohne Framework-Abhängigkeit inline aus, einmal pro Request. Alle Selektoren liegen in `:where()` und haben damit keine Spezifität; Regeln des Website-Themes gewinnen ohne `!important`. Die Klassen beginnen mit `sen-`. `.sen-newsletter--compact` stellt E-Mail-Feld und Button nebeneinander und bricht auf schmalen Viewports in eine Spalte um.
 
-Nach Veröffentlichung der Views liegen Overrides unter `resources/views/vendor/section-engine-newsletter/`. Sichtbare Labels, eindeutige IDs, `aria-describedby`, die `aria-live`-Statusregion, Fokusziele und CSRF-/Kontextfelder erhalten. Das Formular muss weiterhin ohne JavaScript absendbar sein. Browser-Zoom und ausreichende Kontraste/Zielgrößen mit den Projektstyles prüfen.
+| Variable | Standard | Zweck |
+| --- | --- | --- |
+| `--sen-color` | `currentColor` | Text- und Akzentfarbe |
+| `--sen-border` | `1px solid color-mix(in srgb, currentColor 55%, transparent)` | Rahmen; Fallback `1px solid currentColor` |
+| `--sen-radius` | `.375rem` | Eckenradius |
+| `--sen-gap` | `.75rem` | Abstand zwischen Feldern |
+| `--sen-padding` | `.625rem .75rem` | Innenabstand von Eingaben und Button |
+| `--sen-button-bg` | `currentColor` | Button-Hintergrund |
+| `--sen-button-color` | `Canvas` | Button-Textfarbe |
+| `--sen-focus` | `2px solid currentColor` | sichtbarer Fokusrahmen |
+| `--sen-max-width` | `32rem` | maximale Formularbreite |
+
+Die Paketstyles lassen sich nach Veröffentlichung der Konfiguration vollständig abschalten:
+
+```php
+'styles' => false,
+```
+
+Ein mögliches Tailwind-Override in der Anwendungs-CSS:
+
+```css
+@layer components {
+    .sen-newsletter {
+        --sen-button-bg: theme(colors.zinc.900);
+        --sen-button-color: theme(colors.white);
+        --sen-focus: 2px solid theme(colors.sky.600);
+        @apply text-zinc-900 dark:text-zinc-100;
+    }
+
+    .sen-newsletter__input {
+        @apply rounded-lg border-zinc-300 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-950;
+    }
+
+    .sen-newsletter__button {
+        @apply rounded-lg px-5 font-semibold hover:opacity-90;
+    }
+}
+```
+
+Views veröffentlichen:
+
+```sh
+php artisan vendor:publish --tag=section-engine-newsletter-views
+```
+
+Danach liegen Overrides unter `resources/views/vendor/section-engine-newsletter/`, einschließlich Formular-, Theme-Seiten- und Mail-Views. Sichtbare Labels, eindeutige IDs, `aria-describedby`, die `aria-live`-Statusregion, Fokusziele und CSRF-/Kontextfelder erhalten. Das Formular muss weiterhin ohne JavaScript absendbar sein. Browser-Zoom und ausreichende Kontraste/Zielgrößen mit den Projektstyles prüfen.
 
 Eigene Variante ergänzen:
 
