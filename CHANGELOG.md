@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 - 2026-11-09
 
 - Bestätigungsmails ohne Queue erst nach der HTTP-Antwort; Transport- und Queue-Einreihungsfehler werden gemeldet, ohne die öffentliche Antwort zu verändern.
 - Composer-Paket für Section Engine ab v1.1.0 mit Newsletter-Live-Tags und aktiven Listen.
