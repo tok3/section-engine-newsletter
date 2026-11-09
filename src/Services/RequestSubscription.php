@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionEventType;
 use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
 use Tok3\SectionEngineNewsletter\Events\SubscriptionRequested;
@@ -46,13 +47,35 @@ class RequestSubscription
                 DB::afterCommit(fn () => SubscriptionRequested::dispatch($subscription));
             }
             DB::afterCommit(function () use ($subscription, $token, $request): void {
-                $mail = (new ConfirmSubscriptionMail($subscription->id, $token, $request->ip(), $request->userAgent()))->locale($subscription->source_locale);
-                $mailer = Mail::mailer(config('section-engine-newsletter.mailer'))->to($subscription->subscriber->email);
                 $connection = config('section-engine-newsletter.queue');
-                if (is_string($connection) && $connection !== '') {
-                    $mailer->queue($mail->onConnection($connection));
+                $queued = is_string($connection) && $connection !== '';
+                $ip = $request->ip();
+                $userAgent = $request->userAgent();
+                $deliver = function () use ($subscription, $token, $connection, $queued, $ip, $userAgent): void {
+                    // Attempt each scheduled delivery only once, even if termination is invoked again.
+                    static $attempted = false;
+                    if ($attempted) {
+                        return;
+                    }
+                    $attempted = true;
+
+                    try {
+                        $mail = (new ConfirmSubscriptionMail($subscription->id, $token, $ip, $userAgent))->locale($subscription->source_locale);
+                        $mailer = Mail::mailer(config('section-engine-newsletter.mailer'))->to($subscription->subscriber->email);
+                        if ($queued) {
+                            $mailer->queue($mail->onConnection($connection));
+                        } else {
+                            $mailer->send($mail);
+                        }
+                    } catch (Throwable $exception) {
+                        report($exception);
+                    }
+                };
+
+                if ($queued) {
+                    $deliver();
                 } else {
-                    $mailer->send($mail);
+                    app()->terminating($deliver);
                 }
             });
 

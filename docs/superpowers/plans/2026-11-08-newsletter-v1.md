@@ -42,7 +42,7 @@
 9. **Responses:** one generic success message for every case (translated). Without JS: redirect back to `url#newsletter-{form_id}` with flash keyed by `form_id`. With `Accept: application/json`: JSON `{status, message}`; validation errors as 422 JSON. The form view reads its own flash by `form_id`.
 10. **Frontend JS:** tiny vanilla inline script (no Alpine, no build), included once per page (static flag), progressive enhancement only.
 11. **Consent text:** per list and locale (JSON), fallback to `config default_locale`; the exact rendered consent text plus checkbox label is snapshotted with `consent_hash = sha256(snapshot)`. `require_checkbox` default `true`.
-12. **Mail:** Mailable `ConfirmSubscriptionMail`, sent via `Mail::mailer(config('mailer'))` (`null` = default); queued if `config('queue')` is a non-empty connection name, otherwise sent synchronously. Locale = signup locale. Subject/intro from list overrides or translations.
+12. **Mail:** Mailable `ConfirmSubscriptionMail`, sent via `Mail::mailer(config('mailer'))` (`null` = default); queued if `config('queue')` is a non-empty connection name. **Decision 2026-11-09 (Task 12):** without a queue, deliver after the HTTP response via a terminating callback; transport/enqueue failures are reported and never alter the response (supersedes the original synchronous default). Locale = signup locale. Subject/intro from list overrides or translations.
 13. **Editor preview** (`$context->editorPreview`): render the form with all controls `disabled`, plus a small hint "Newsletter: {list name}{, Tag: …}"; never write anything.
 14. **Unknown/inactive list:** frontend `''`; editor preview or `section-engine.design_mode`: `<mark data-section-engine-newsletter-missing="{key}">` with escaped placeholder.
 15. **insertOptions:** one entry per active list: label `{list name}`, snippet `{{ newsletter:{key} }}`; provider `label()` = `Newsletter`.
@@ -163,3 +163,34 @@ Keine offenen Implementierungsblocker. Die Prüfung gegen **Review Focus** wurde
 Nach der separaten Review die private Composer-Quelle hinzufügen und `tok3/section-engine-newsletter` in einer verfügbaren geprüften Version anfordern. Für erneute lokale Tests das Path-Repository `../section-engine-newsletter` mit `options.symlink=true` und `composer require tok3/section-engine-newsletter:dev-main` verwenden. Core `^1.1.0`, Filament 5 und PHP 8.3+ voraussetzen. Im vorhandenen Panel zusätzlich `Tok3\SectionEngineNewsletter\SectionEngineNewsletterPlugin::make()` registrieren. `php artisan vendor:publish --tag=section-engine-newsletter-migrations` und `php artisan migrate` ausführen. Optional Konfiguration/Views/Übersetzungen veröffentlichen. Lokal `MAIL_MAILER=log`; später den tatsächlichen Laravel-Mailer, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` und `APP_URL` konfigurieren. Falls `section-engine-newsletter.queue` gesetzt wird, den Worker für diese Verbindung betreiben. Den Laravel-Scheduler minütlich über `php artisan schedule:run` ausführen. Aktive Listen mit Einwilligungstext mindestens für `default_locale` anlegen, dann die Live-Tags einbinden. Verbraucher benötigen keinen npm- oder Build-Schritt.
 
 Alle Änderungen bleiben lokal auf `main`. Kein Push, kein Tag.
+
+## Claude review — 2026-11-09
+
+**Result:** Tasks 0–11 match plan and spec. One defect against Review Focus ("no address enumeration via … timing differences") must be fixed before the first release tag.
+
+Checked: 12 commits (one per task), proof events append-only on model level, GET confirm/unsubscribe never change state, signatures/tokens (`hash_equals`, sha256), proof route behind `ManageSubscribers::authorize()`, identical responses incl. rate limit path, only documented core APIs (+ explicitly allowed `section-engine.models.page`), `source_page_id` decision implemented, `leibnizer-dev` fully reverted (only the pre-existing local Editorial changes remain; `composer.json` differs from the pre-test state only by re-expanded `keywords` whitespace, cosmetic and uncommitted). JS suite re-run by Claude: 5/5. PHP suite not re-run by Claude (no PHP in review environment); Codex results accepted.
+
+### Defect: timing side channel and error leak on signup
+
+`RequestSubscription::handle()` sends the confirmation mail synchronously (`DB::afterCommit` → `Mail::send`) when no queue is configured — the default. Mail is only sent for new / resubscribed / cooled-down pending addresses, never for confirmed ones. Consequences:
+
+- Response time reveals whether an address is already confirmed on a list (SMTP roundtrip vs. none).
+- An SMTP failure throws inside the request → HTTP 500 only for not-yet-confirmed addresses, also revealing state and breaking the "identical response" rule.
+
+### Task 12 – Deliver confirmation mail outside the request
+
+- [x] Without queue: send the mail after the response has been sent (`dispatch(...)->afterResponse()` or an equivalent terminating callback), never inside the request lifecycle. With queue: unchanged.
+- [x] Mail failures (both paths) are caught and `report()`ed; they never change the HTTP response. No `confirmation_sent` event when sending failed.
+- [x] Tests: response is identical (status, body, headers except cookies) for new, pending, confirmed and rate-limited cases while a mailer that throws is bound; no mail is sent before the response in sync mode; failure is reported and leaves the subscription `pending` with its `requested` event intact.
+- [x] `docs/privacy.md` / `docs/installation.md`: recommend a queue in production; explain that without a queue the mail is sent after the response.
+- [x] Commit `fix: send confirmation mail outside the signup request`
+- [x] Re-run full matrix; append a short note below.
+
+
+### Task 12 – Abschlussnotiz 2026-11-09
+
+Ohne konfigurierte Queue wird der Versand nach dem Commit einmalig für die Anwendungsterminierung nach der HTTP-Antwort registriert. Mailer-/Transportfehler und Fehler beim Queue-Einreihen werden abgefangen und über `report()` gemeldet; die öffentliche Antwort sowie Pending-Status und Anforderungsnachweis bleiben erhalten. `confirmation_sent` entsteht weiterhin nur nach tatsächlicher Übergabe an den Mailer. Queue-Verbindung und Laravel-Worker-Verhalten bleiben unverändert. Installation, Datenschutz, Entwickler-Konfiguration und Changelog sind aktualisiert; für Produktion wird eine dauerhafte Queue empfohlen.
+
+Test-first: sechs neue Regressionstests zunächst mit frühem Transportaufruf bzw. HTTP 500 rot, danach grün. Die Tests trennen `Kernel::handle()` von `terminate()` und prüfen JSON/Redirects bei neuen, offenen, bestätigten und rate-limitierten Anmeldungen mit tatsächlich werfendem Mailtransport, außerdem Queue-Backend-Ausfall, Fehlermeldung und unveränderte IP-/User-Agent-Nachweise. Cookies werden beim Headervergleich ausgenommen; der naturgemäß anfrageabhängige HTTP-`Date`-Wert wird separat auf sein Format geprüft und für den Vergleich normalisiert.
+
+Vollständige Prüfmatrix erfolgreich: `composer test` **95 Tests / 722 Assertions**, `composer format:check`, `composer analyse` und `npm test` **5/5** ohne übersprungene Tests. Keine Core-/Editorial-/Verbraucheränderung. Kein Push, kein Tag.

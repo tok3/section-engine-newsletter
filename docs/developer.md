@@ -27,7 +27,7 @@ Alle Schlüssel stehen unter `section-engine-newsletter`:
 | --- | --- | --- |
 | `route_prefix` | `newsletter` | Präfix der öffentlichen Routen |
 | `default_locale` | `en` | Fallback der Listentexte |
-| `mailer`, `queue` | `null` | Standard-Mailer, synchron; Queue als Verbindungsname |
+| `mailer`, `queue` | `null` | Standard-Mailer, Versand nach HTTP-Antwort; Queue als Verbindungsname |
 | `from.address`, `from.name` | `null` | Fallback auf `mail.from` |
 | `confirmation_ttl_hours` | 48 | Bestätigungslink-Laufzeit |
 | `context_ttl_hours` | 168 | Formularkontext-Laufzeit |

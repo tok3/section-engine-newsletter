@@ -14,6 +14,10 @@ Die Herkunftsseiten-ID ist historisch, ohne Foreign Key. Sie bleibt auch bei end
 
 Zusätzlich können Laravel, Webserver und Mail-/Queue-Infrastruktur eigene Sessions, Logs, Warteschlangen und Backups führen. Deren Fristen sind außerhalb dieses Pakets zu konfigurieren.
 
+## Bestätigungsmails und Fehler
+
+Für den Produktionsbetrieb wird eine dauerhafte Queue mit laufendem Worker empfohlen. Ohne konfigurierte Queue erfolgt der Versand nach der HTTP-Antwort im terminierenden PHP-Prozess. Die öffentliche Antwort bleibt unabhängig vom Abonnementstatus und von Versand- oder Queue-Einreihungsfehlern gleich. Fehler werden über Laravels `report()` an die Anwendung gemeldet. Ein fehlgeschlagener Mailversand erzeugt keinen `confirmation_sent`-Nachweis; das Pending-Abonnement und das bereits gespeicherte Anforderungsereignis bleiben erhalten. Erst die tatsächliche Übergabe an den Mailer wird als `confirmation_sent` mit den ursprünglichen IP-/User-Agent-Daten protokolliert.
+
 ## Aufbewahrung und Löschung
 
 `section-engine-newsletter:prune` wird täglich über den Laravel-Scheduler aufgerufen:

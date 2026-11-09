@@ -48,9 +48,13 @@ In `config/section-engine-newsletter.php`:
 
 ```php
 'mailer' => null, // null = Laravel-Standard
-'queue' => null,  // null/leer = synchron; sonst Queue-Verbindungsname
+'queue' => null,  // null/leer = Versand nach der HTTP-Antwort; sonst Queue-Verbindungsname
 'from' => ['address' => null, 'name' => null], // Laravel mail.from als Standard
 ```
+
+**Für den Produktionsbetrieb wird eine dauerhafte Queue wie `database` oder `redis` mit laufendem Worker empfohlen.** Eine `sync`-Queue-Verbindung führt Jobs weiterhin unmittelbar aus und bietet diese Entkopplung nicht.
+
+Ohne konfigurierte Queue wird die Bestätigungsmail nach dem Datenbank-Commit für einen Terminierungs-Callback registriert und erst nach dem Senden der HTTP-Antwort verschickt. Dafür wird kein Queue-Worker benötigt; der PHP-Prozess bleibt bis zum Ende des Versandversuchs beschäftigt. Dieser Callback ist keine dauerhaft gespeicherte Versandaufgabe. Versandfehler werden über Laravels `report()` gemeldet und ändern die bereits gesendete generische Antwort nicht. Auch Fehler beim Einreihen einer Mail in die konfigurierte Queue ändern die Antwort nicht. Bei fehlgeschlagenem Versand wird kein `confirmation_sent` protokolliert.
 
 Bei z. B. `queue => 'database'` die Laravel-Queue-Tabelle und einen Worker für diese Verbindung einrichten: `php artisan queue:work database`. Die Mailjobs werden nach dem Datenbank-Commit eingereiht und verschlüsselt. Schlüsselwechsel und Queue-Betrieb nach den Laravel-Regeln planen. `confirmation_sent` wird erst nach tatsächlicher Mailer-Übergabe protokolliert.
 
