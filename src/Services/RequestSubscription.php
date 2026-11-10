@@ -27,7 +27,10 @@ class RequestSubscription
             $isNew = $subscription === null;
             $resubscribe = $subscription?->status === SubscriptionStatus::Unsubscribed;
             $alreadyConfirmed = $subscription?->status === SubscriptionStatus::Confirmed;
-            $withinCooldown = $subscription?->requested_at->gt(now()->subMinutes(config('section-engine-newsletter.resend_cooldown_minutes'))) ?? false;
+            $lastRequestedAt = $subscription
+                ? ($subscription->last_requested_at ?? $subscription->requested_at)
+                : null;
+            $withinCooldown = $lastRequestedAt?->gt(now()->subMinutes(config('section-engine-newsletter.resend_cooldown_minutes'))) ?? false;
             if ($subscription && $withinCooldown && ($alreadyConfirmed || $subscription->status === SubscriptionStatus::Pending)) {
                 $this->record($subscription, SubscriptionEventType::Requested, $context, $request, array_filter([
                     'mail_requested' => false,
@@ -38,20 +41,28 @@ class RequestSubscription
             }
             $token = Str::random(64);
             $snapshot = $context['consent_snapshot'];
+            $requestedAt = now();
             $subscription ??= new Subscription(['subscriber_id' => $subscriber->id, 'list_id' => $list->id]);
-            $attributes = [
-                'tag' => $context['tag'], 'source_page_id' => $context['page_id'],
-                'source_url' => $context['url'], 'source_locale' => $context['locale'], 'consent_text_snapshot' => $snapshot,
-                'consent_hash' => hash('sha256', $snapshot), 'requested_at' => now(), 'requested_ip' => $request->ip(), 'requested_user_agent' => $request->userAgent(),
+            $confirmationAttributes = [
                 'confirmation_token_hash' => hash('sha256', $token), 'confirmation_expires_at' => now()->addHours(config('section-engine-newsletter.confirmation_ttl_hours')),
             ];
-            if (! $alreadyConfirmed) {
-                $attributes = array_merge($attributes, [
+            $attributes = $alreadyConfirmed
+                ? $confirmationAttributes + ['last_requested_at' => $requestedAt]
+                : $confirmationAttributes + [
+                    'tag' => $context['tag'], 'source_page_id' => $context['page_id'],
+                    'source_url' => $context['url'], 'source_locale' => $context['locale'], 'consent_text_snapshot' => $snapshot,
+                    'consent_hash' => hash('sha256', $snapshot), 'requested_at' => $requestedAt, 'last_requested_at' => $requestedAt, 'requested_ip' => $request->ip(), 'requested_user_agent' => $request->userAgent(),
                     'status' => SubscriptionStatus::Pending,
                     'confirmed_at' => null, 'confirmed_ip' => null, 'confirmed_user_agent' => null, 'unsubscribed_at' => null, 'unsubscribed_ip' => null,
-                ]);
+                ];
+            if ($alreadyConfirmed) {
+                $subscription->timestamps = false;
             }
-            $subscription->fill($attributes)->save();
+            try {
+                $subscription->fill($attributes)->save();
+            } finally {
+                $subscription->timestamps = true;
+            }
             $this->record($subscription, $resubscribe ? SubscriptionEventType::ResubscribeRequested : SubscriptionEventType::Requested, $context, $request, array_filter([
                 'mail_requested' => true,
                 'already_confirmed' => $alreadyConfirmed ?: null,
@@ -60,12 +71,13 @@ class RequestSubscription
             if ($isNew || $resubscribe) {
                 DB::afterCommit(fn () => SubscriptionRequested::dispatch($subscription));
             }
-            DB::afterCommit(function () use ($subscription, $token, $request): void {
+            $mailLocale = $context['locale'];
+            DB::afterCommit(function () use ($subscription, $token, $request, $mailLocale): void {
                 $connection = config('section-engine-newsletter.queue');
                 $queued = is_string($connection) && $connection !== '';
                 $ip = $request->ip();
                 $userAgent = $request->userAgent();
-                $deliver = function () use ($subscription, $token, $connection, $queued, $ip, $userAgent): void {
+                $deliver = function () use ($subscription, $token, $connection, $queued, $ip, $userAgent, $mailLocale): void {
                     // Attempt each scheduled delivery only once, even if termination is invoked again.
                     static $attempted = false;
                     if ($attempted) {
@@ -74,7 +86,7 @@ class RequestSubscription
                     $attempted = true;
 
                     try {
-                        $mail = (new ConfirmSubscriptionMail($subscription->id, $token, $ip, $userAgent))->locale($subscription->source_locale);
+                        $mail = (new ConfirmSubscriptionMail($subscription->id, $token, $ip, $userAgent))->locale($mailLocale);
                         $mailer = Mail::mailer(config('section-engine-newsletter.mailer'))->to($subscription->subscriber->email);
                         if ($queued) {
                             $mailer->queue($mail->onConnection($connection));

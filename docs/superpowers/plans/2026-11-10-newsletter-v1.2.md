@@ -97,3 +97,24 @@ Tasks 1–5 sind in der vorgegebenen Reihenfolge und mit je einem eigenen Commit
 - Die Filament-/Livewire-Prüfungen laufen über den registrierten Testbench-Workbench-Provider. Eine zusätzliche Verbraucherprüfung war nicht erforderlich. `~/Sites/leibnizer` und `~/Sites/leibnizer-dev` wurden nicht verändert.
 
 Kein Push und kein Tag. Es bestehen keine Implementierungsblocker. Die Prüfung gegen **Review Focus** wurde wie beauftragt nicht durchgeführt und bleibt bei Claude.
+
+## Claude review — 2026-11-10
+
+**Result:** Tasks 1–5 match the plan (notice, site languages with tabs, de/en/es defaults, es output). JS suite re-run by Claude: 7/7. PHP not re-run by Claude. One defect in Task 1 must be fixed before tagging 1.2.0.
+
+### Defect: re-request overwrites the data of a confirmed subscription
+
+For an already confirmed subscription, `RequestSubscription::handle()` keeps status and `confirmed_*`, but still overwrites `tag`, `source_page_id`, `source_url`, `source_locale`, `consent_text_snapshot`, `consent_hash`, `requested_at`, `requested_ip`, `requested_user_agent` with the data of the new request. Anyone can submit a known address again, so a third party can rewrite the row of someone else's confirmed subscription: tag/source statistics change, and the row's consent snapshot and request IP no longer belong to the confirmation. The append-only events still hold the truth, but the subscription row must stay consistent with the confirmation it represents.
+
+### Task 6 – Keep confirmed subscriptions untouched on re-request
+
+- [x] For `confirmed` subscriptions a re-request outside cooldown changes **only** `confirmation_token_hash`, `confirmation_expires_at` and a new cooldown marker. All other columns stay as they were. The new request is fully recorded in its `requested` event (already the case).
+- [x] Cooldown marker: additive migration `add_last_requested_at_to_section_engine_newsletter_subscriptions_table` (nullable timestamp, backfilled from `requested_at`). Cooldown for every status uses `last_requested_at` (fallback `requested_at`). Pending/unsubscribed flows update `last_requested_at` together with `requested_at`.
+- [x] Tests: confirmed row unchanged except token/expiry/`last_requested_at` after a re-request with different tag, page, IP and consent text; cooldown applies to confirmed re-requests; pending/unsubscribed behaviour unchanged; identical responses.
+- [x] CHANGELOG stays `1.2.0`. Commit `fix: keep confirmed subscriptions unchanged on re-request`. Full matrix. No push, no tag.
+
+## Übergabenotiz — Task 6 abgeschlossen (2026-11-10)
+
+Task 6 wurde test-first umgesetzt. Die additive Migration ergänzt `last_requested_at` und übernimmt für bestehende Datensätze den Wert aus `requested_at`. Bestätigte Abonnements behalten bei einer erneuten Anmeldung sämtliche bisherigen Herkunfts-, Einwilligungs-, Anfrage-, Bestätigungs- und Zeitstempeldaten; geändert werden ausschließlich Bestätigungstoken, Ablaufzeit und Cooldown-Marker. Die neue Anfrage bleibt mit Tag, Seite, URL, IP, User-Agent, Einwilligungstext und Locale vollständig im unveränderlichen `requested`-Event dokumentiert. Pending- und Resubscribe-Abläufe aktualisieren `requested_at` und `last_requested_at` gemeinsam; für Altdaten greift der Cooldown auf `requested_at` zurück.
+
+Vollständige Prüfmatrix: `composer validate --strict` erfolgreich; `composer test` **141 Tests / 1105 Assertions**; `npm test` **7/7**; `composer format:check` erfolgreich; `composer analyse` **38 Dateien**, keine Fehler; `git diff --check` erfolgreich. `CHANGELOG.md` bleibt unverändert bei 1.2.0. Kein Push, kein Tag.

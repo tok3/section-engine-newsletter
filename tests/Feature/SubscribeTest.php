@@ -48,19 +48,26 @@ class SubscribeTest extends TestCase
         $payload = $this->formPayload();
         $response = $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json();
         $subscription = Subscription::firstOrFail();
+        $this->assertSame($subscription->requested_at->toISOString(), $subscription->last_requested_at?->toISOString());
+        $firstRequestedAt = $subscription->requested_at;
         $token = $subscription->confirmation_token_hash;
         $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
         $this->assertSame($token, $subscription->fresh()->confirmation_token_hash);
         $this->travel(11)->minutes();
         $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
-        $this->assertNotSame($token, $subscription->fresh()->confirmation_token_hash);
+        $subscription->refresh();
+        $this->assertNotSame($token, $subscription->confirmation_token_hash);
+        $this->assertTrue($subscription->requested_at->isAfter($firstRequestedAt));
+        $this->assertSame($subscription->requested_at->toISOString(), $subscription->last_requested_at?->toISOString());
         $subscription->update(['status' => 'confirmed']);
         $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
         $this->assertSame(SubscriptionStatus::Confirmed, $subscription->fresh()->status);
         $subscription->update(['status' => 'unsubscribed']);
         $this->travel(61)->minutes();
         $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
-        $this->assertSame(SubscriptionStatus::Pending, $subscription->fresh()->status);
+        $subscription->refresh();
+        $this->assertSame(SubscriptionStatus::Pending, $subscription->status);
+        $this->assertSame($subscription->requested_at->toISOString(), $subscription->last_requested_at?->toISOString());
         $this->assertDatabaseHas('section_engine_newsletter_events', ['type' => 'resubscribe_requested']);
     }
 

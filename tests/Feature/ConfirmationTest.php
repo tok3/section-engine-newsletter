@@ -13,6 +13,7 @@ use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
 use Tok3\SectionEngineNewsletter\Mail\ConfirmSubscriptionMail;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
+use Tok3\SectionEngineNewsletter\Support\FormContext;
 
 class ConfirmationTest extends SubscribeTest
 {
@@ -106,7 +107,7 @@ class ConfirmationTest extends SubscribeTest
     {
         Mail::fake();
         $payload = $this->formPayload();
-        $response = $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json();
+        $this->postJson('/newsletter/subscribe', $payload)->assertOk();
         $firstMail = Mail::sent(ConfirmSubscriptionMail::class)->first();
         $subscription = Subscription::firstOrFail();
 
@@ -116,27 +117,57 @@ class ConfirmationTest extends SubscribeTest
             ->assertRedirect();
         $subscription->refresh();
         $confirmedAt = $subscription->confirmed_at?->toISOString();
-        $confirmedIp = $subscription->confirmed_ip;
-        $confirmedUserAgent = $subscription->confirmed_user_agent;
+        $confirmedRow = $subscription->getRawOriginal();
         $firstTokenHash = $subscription->confirmation_token_hash;
-        $firstRequestedAt = $subscription->requested_at;
+        $firstTokenExpiry = $subscription->confirmation_expires_at;
+        $firstLastRequestedAt = $subscription->last_requested_at;
+        $this->assertNotNull($firstLastRequestedAt);
 
         $this->travel(11)->minutes();
-        $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
+        $formContext = app(FormContext::class);
+        $changedContext = $formContext->create(
+            $subscription->list,
+            LiveTokenRenderContext::frontend('de', url: 'http://localhost/changed-source'),
+            'changed',
+        );
+        $changedContext['page_id'] = 987;
+        $changedContext['consent_snapshot'] = 'Injected consent text';
+        $this->travel(4)->seconds();
+        $changedPayload = [
+            'email' => 'new@example.org',
+            'context' => $formContext->encrypt($changedContext),
+            'website' => '',
+            'consent' => '1',
+        ];
+        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::99'])
+            ->withHeader('User-Agent', 'Replacement request browser')
+            ->postJson('/newsletter/subscribe', $changedPayload)
+            ->assertOk()
+            ->assertJsonPath('message', 'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung über den Button darin – erst dann bist du eingetragen. Keine E-Mail erhalten? Schau auch im Spam-Ordner nach.');
 
         Mail::assertSentCount(2);
         $resentMail = Mail::sent(ConfirmSubscriptionMail::class)->last();
         $subscription->refresh();
-        $this->assertSame(SubscriptionStatus::Confirmed, $subscription->status);
-        $this->assertSame($confirmedAt, $subscription->confirmed_at?->toISOString());
-        $this->assertSame($confirmedIp, $subscription->confirmed_ip);
-        $this->assertSame($confirmedUserAgent, $subscription->confirmed_user_agent);
+        $currentRow = $subscription->getRawOriginal();
+        foreach (['confirmation_token_hash', 'confirmation_expires_at', 'last_requested_at'] as $mutable) {
+            unset($confirmedRow[$mutable], $currentRow[$mutable]);
+        }
+        $this->assertSame($confirmedRow, $currentRow);
         $this->assertNotSame($firstTokenHash, $subscription->confirmation_token_hash);
+        $this->assertTrue($subscription->confirmation_expires_at->isAfter($firstTokenExpiry));
+        $this->assertTrue($subscription->last_requested_at->isAfter($firstLastRequestedAt));
         $this->assertSame(hash('sha256', $resentMail->token), $subscription->confirmation_token_hash);
-        $this->assertTrue($subscription->requested_at->isAfter($firstRequestedAt));
+        $this->assertSame('de', $resentMail->locale);
         $requested = $subscription->events()->where('type', 'requested')->reorder()->latest('id')->firstOrFail();
         $this->assertTrue($requested->meta['already_confirmed']);
         $this->assertTrue($requested->meta['mail_requested']);
+        $this->assertSame('changed', $requested->tag);
+        $this->assertSame(987, $requested->source_page_id);
+        $this->assertSame('http://localhost/changed-source', $requested->source_url);
+        $this->assertSame('2001:db8::99', $requested->ip);
+        $this->assertSame('Replacement request browser', $requested->user_agent);
+        $this->assertSame('Injected consent text', $requested->meta['consent_text_snapshot']);
+        $this->assertSame('de', $requested->meta['locale']);
 
         $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::32'])
             ->withHeader('User-Agent', 'Repeated confirmation browser')
@@ -145,12 +176,10 @@ class ConfirmationTest extends SubscribeTest
         $subscription->refresh();
         $this->assertSame(SubscriptionStatus::Confirmed, $subscription->status);
         $this->assertSame($confirmedAt, $subscription->confirmed_at?->toISOString());
-        $this->assertSame($confirmedIp, $subscription->confirmed_ip);
-        $this->assertSame($confirmedUserAgent, $subscription->confirmed_user_agent);
         $this->assertSame(1, $subscription->events()->where('type', 'confirmed')->count());
     }
 
-    public function test_confirmed_subscription_within_cooldown_gets_identical_response_without_mail(): void
+    public function test_confirmed_subscription_cooldown_uses_marker_and_falls_back_to_requested_at(): void
     {
         Mail::fake();
         $payload = $this->formPayload();
@@ -159,11 +188,23 @@ class ConfirmationTest extends SubscribeTest
         $subscription = Subscription::firstOrFail();
         $this->post('/newsletter/confirm/'.$subscription->id.'/'.$mail->token)->assertRedirect();
         $tokenHash = $subscription->fresh()->confirmation_token_hash;
+        $subscription->update([
+            'requested_at' => now()->subHour(),
+            'last_requested_at' => now(),
+        ]);
 
         $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
 
         Mail::assertSentCount(1);
         $this->assertSame(SubscriptionStatus::Confirmed, $subscription->fresh()->status);
+        $this->assertSame($tokenHash, $subscription->fresh()->confirmation_token_hash);
+
+        $subscription->update([
+            'requested_at' => now(),
+            'last_requested_at' => null,
+        ]);
+        $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
+        Mail::assertSentCount(1);
         $this->assertSame($tokenHash, $subscription->fresh()->confirmation_token_hash);
     }
 

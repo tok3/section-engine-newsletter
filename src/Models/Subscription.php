@@ -22,6 +22,7 @@ use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
  * @property string $consent_text_snapshot
  * @property string $consent_hash
  * @property CarbonImmutable $requested_at
+ * @property CarbonImmutable|null $last_requested_at
  * @property string|null $requested_ip
  * @property string|null $requested_user_agent
  * @property CarbonImmutable|null $confirmed_at
@@ -45,7 +46,7 @@ class Subscription extends Model
 
     protected function casts(): array
     {
-        return ['status' => SubscriptionStatus::class, 'requested_at' => 'immutable_datetime', 'confirmed_at' => 'immutable_datetime', 'unsubscribed_at' => 'immutable_datetime', 'confirmation_expires_at' => 'immutable_datetime'];
+        return ['status' => SubscriptionStatus::class, 'requested_at' => 'immutable_datetime', 'last_requested_at' => 'immutable_datetime', 'confirmed_at' => 'immutable_datetime', 'unsubscribed_at' => 'immutable_datetime', 'confirmation_expires_at' => 'immutable_datetime'];
     }
 
     protected static function newFactory(): SubscriptionFactory

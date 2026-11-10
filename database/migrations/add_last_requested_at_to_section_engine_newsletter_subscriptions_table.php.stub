@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('section_engine_newsletter_subscriptions', function (Blueprint $table): void {
+            $table->timestamp('last_requested_at')->nullable()->after('requested_at');
+        });
+
+        DB::table('section_engine_newsletter_subscriptions')
+            ->whereNull('last_requested_at')
+            ->update(['last_requested_at' => DB::raw('requested_at')]);
+    }
+
+    public function down(): void
+    {
+        Schema::table('section_engine_newsletter_subscriptions', function (Blueprint $table): void {
+            $table->dropColumn('last_requested_at');
+        });
+    }
+};

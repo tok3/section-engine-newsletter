@@ -16,7 +16,7 @@ class SectionEngineNewsletterServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        $package->name('section-engine-newsletter')->hasConfigFile()->hasViews()->hasTranslations()->hasRoute('web')->hasMigrations('create_section_engine_newsletter_tables', 'add_success_text_to_section_engine_newsletter_lists_table')->hasCommand(PruneCommand::class);
+        $package->name('section-engine-newsletter')->hasConfigFile()->hasViews()->hasTranslations()->hasRoute('web')->hasMigrations('create_section_engine_newsletter_tables', 'add_success_text_to_section_engine_newsletter_lists_table', 'add_last_requested_at_to_section_engine_newsletter_subscriptions_table')->hasCommand(PruneCommand::class);
     }
 
     public function packageBooted(): void

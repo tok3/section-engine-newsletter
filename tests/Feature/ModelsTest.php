@@ -2,6 +2,7 @@
 
 namespace Tok3\SectionEngineNewsletter\Tests\Feature;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -14,6 +15,29 @@ use Tok3\SectionEngineNewsletter\Tests\TestCase;
 
 class ModelsTest extends TestCase
 {
+    public function test_subscriptions_store_a_separate_cooldown_marker(): void
+    {
+        $this->assertTrue(Schema::hasColumn('section_engine_newsletter_subscriptions', 'last_requested_at'));
+        $marker = CarbonImmutable::parse('2026-11-10 12:34:56');
+        $subscription = Subscription::factory()->create(['last_requested_at' => $marker]);
+
+        $this->assertSame($marker->toISOString(), $subscription->fresh()->last_requested_at?->toISOString());
+    }
+
+    public function test_cooldown_marker_migration_backfills_the_last_request_time(): void
+    {
+        $migration = require __DIR__.'/../../database/migrations/add_last_requested_at_to_section_engine_newsletter_subscriptions_table.php.stub';
+        $migration->down();
+        $requestedAt = CarbonImmutable::parse('2026-11-09 08:15:00');
+        $subscription = Subscription::factory()->create(['requested_at' => $requestedAt]);
+
+        $migration->up();
+
+        $stored = DB::table('section_engine_newsletter_subscriptions')->where('id', $subscription->id)->value('last_requested_at');
+        $this->assertNotNull($stored);
+        $this->assertSame($requestedAt->toISOString(), CarbonImmutable::parse((string) $stored)->toISOString());
+    }
+
     public function test_lists_store_optional_localized_success_text(): void
     {
         $this->assertTrue(Schema::hasColumn('section_engine_newsletter_lists', 'success_text'));
