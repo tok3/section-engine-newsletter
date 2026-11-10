@@ -33,6 +33,7 @@ abstract class TestCase extends Orchestra
     protected function defineDatabaseMigrations(): void
     {
         (require __DIR__.'/../database/migrations/create_section_engine_newsletter_tables.php.stub')->up();
+        (require __DIR__.'/../database/migrations/add_success_text_to_section_engine_newsletter_lists_table.php.stub')->up();
         Schema::create('section_engine_menu_items', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('page_id')->nullable();

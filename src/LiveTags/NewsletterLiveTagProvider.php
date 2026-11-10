@@ -65,6 +65,16 @@ class NewsletterLiveTagProvider implements LiveTagProvider
             }
         }
 
+        if (isset($feedback['message'])) {
+            return view('section-engine-newsletter::form.success', [
+                'formId' => $feedback['form_id'],
+                'locale' => $data['locale'],
+                'message' => $feedback['message'],
+                'includeScript' => $includeScript,
+                'includeStyles' => $includeStyles,
+            ])->render();
+        }
+
         return view($variants[$variant], ['feedback' => $feedback,
             'list' => $list, 'data' => $data, 'encryptedContext' => $formContext->encrypt($data),
             'preview' => $context->editorPreview, 'variant' => $variant, 'includeScript' => $includeScript,

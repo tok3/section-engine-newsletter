@@ -48,9 +48,9 @@
 - [x] Commit `feat: resend confirmation mail for existing subscriptions`
 
 ### Task 2 – Success notice
-- [ ] Decision 2 incl. migration `add_success_text_to_section_engine_newsletter_lists_table`.
-- [ ] Tests: no-JS redirect shows notice instead of that form instance only; JSON mode returns the text and jsdom replaces the form and focuses the notice; per-list override and locale fallback.
-- [ ] Commit `feat: clear success notice after newsletter signup`
+- [x] Decision 2 incl. migration `add_success_text_to_section_engine_newsletter_lists_table`.
+- [x] Tests: no-JS redirect shows notice instead of that form instance only; JSON mode returns the text and jsdom replaces the form and focuses the notice; per-list override and locale fallback.
+- [x] Commit `feat: clear success notice after newsletter signup`
 
 ### Task 3 – Languages from Section Engine and list editor layout
 - [ ] Decisions 3 and 4.

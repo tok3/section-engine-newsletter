@@ -1,7 +1,7 @@
 <script data-newsletter-enhancement>
 (() => {
-    const confirmed = document.querySelector('[data-newsletter-confirmed][autofocus]');
-    if (confirmed) confirmed.focus();
+    const notice = document.querySelector('[data-newsletter-confirmed][autofocus], [data-newsletter-success][autofocus]');
+    if (notice) notice.focus();
     if (!window.fetch || !window.FormData) return;
     document.addEventListener('submit', async (event) => {
         const form = event.target;
@@ -36,8 +36,16 @@
                 (first || status).focus();
             } else {
                 if (!response.ok) throw new Error('Request failed');
-                status.textContent = result.message;
-                status.focus();
+                const notice = document.createElement('div');
+                notice.className = 'sen-newsletter__message';
+                notice.id = form.id;
+                notice.setAttribute('role', 'status');
+                notice.setAttribute('aria-live', 'polite');
+                notice.setAttribute('tabindex', '-1');
+                notice.setAttribute('data-newsletter-success', '');
+                notice.textContent = result.message;
+                form.replaceWith(notice);
+                notice.focus();
             }
         } catch (error) {
             status.textContent = form.dataset.errorMessage;

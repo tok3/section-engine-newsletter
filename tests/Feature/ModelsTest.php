@@ -3,6 +3,8 @@
 namespace Tok3\SectionEngineNewsletter\Tests\Feature;
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use LogicException;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 use Tok3\SectionEngineNewsletter\Models\Subscriber;
@@ -12,6 +14,14 @@ use Tok3\SectionEngineNewsletter\Tests\TestCase;
 
 class ModelsTest extends TestCase
 {
+    public function test_lists_store_optional_localized_success_text(): void
+    {
+        $this->assertTrue(Schema::hasColumn('section_engine_newsletter_lists', 'success_text'));
+        $list = NewsletterList::factory()->create();
+        DB::table('section_engine_newsletter_lists')->where('id', $list->id)->update(['success_text' => json_encode(['de' => 'Fast geschafft!'])]);
+        $this->assertSame(['de' => 'Fast geschafft!'], $list->fresh()->success_text);
+    }
+
     public function test_subscriber_normalizes_email(): void
     {
         $this->assertTrue(class_exists(Subscriber::class), 'Subscriber model is available');

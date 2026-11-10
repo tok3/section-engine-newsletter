@@ -15,15 +15,20 @@ function setup(fetch) {
   return { dom, submit, document: dom.window.document };
 }
 const settle = () => new Promise(resolve => setTimeout(resolve, 0));
-test('success posts form data, announces status and moves focus', async () => {
+test('success posts form data, replaces only that form and focuses the notice', async () => {
   let request;
   const { document, submit } = setup(async (url, options) => { request = { url, options }; return { ok: true, json: async () => ({ status: 'success', message: 'Check inbox' }) }; });
   const { node, event } = submit(); await settle();
   assert.equal(event.defaultPrevented, true); assert.equal(request.options.method, 'POST');
   assert.equal(request.options.headers.Accept, 'application/json'); assert.equal(request.options.body.get('context'), 'encrypted');
-  assert.equal(node.querySelector('[data-newsletter-status]').textContent, 'Check inbox');
-  assert.equal(document.activeElement, node.querySelector('[data-newsletter-status]'));
-  assert.equal(node.querySelector('button').disabled, false);
+  const notice = document.querySelector('[data-newsletter-success]');
+  assert.equal(document.querySelector('form#first'), null);
+  assert.equal(document.getElementById('second').matches('[data-newsletter-form]'), true);
+  assert.equal(notice.id, 'first');
+  assert.equal(notice.textContent, 'Check inbox');
+  assert.equal(notice.getAttribute('role'), 'status');
+  assert.equal(notice.getAttribute('aria-live'), 'polite');
+  assert.equal(document.activeElement, notice);
 });
 test('422 errors are linked, escaped and focus the first invalid field', async () => {
   const { document, submit } = setup(async () => ({ ok: false, status: 422, json: async () => ({ message: 'Invalid', errors: { email: ['<bad email>'] } }) }));
@@ -44,7 +49,8 @@ test('delegated enhancement handles later forms without touching another instanc
   const { document, submit } = setup(async () => ({ ok: true, json: async () => ({ message: 'Second only' }) }));
   submit('second'); await settle();
   assert.equal(document.querySelector('#first [data-newsletter-status]').textContent, '');
-  assert.equal(document.querySelector('#second [data-newsletter-status]').textContent, 'Second only');
+  assert.equal(document.querySelector('form#second'), null);
+  assert.equal(document.querySelector('[data-newsletter-success]').textContent, 'Second only');
   assert.equal(submit('other').event.defaultPrevented, false);
 });
 test('inflight submit is not duplicated and old errors are cleared on retry', async () => {

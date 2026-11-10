@@ -13,6 +13,7 @@ use Tok3\SectionEngineNewsletter\Database\Factories\NewsletterListFactory;
  * @property string $key
  * @property string $name
  * @property array<string, string> $consent_text
+ * @property array<string, string>|null $success_text
  * @property array<string, string>|null $confirmation_subject
  * @property array<string, string>|null $confirmation_intro
  * @property bool $active
@@ -30,7 +31,13 @@ class NewsletterList extends Model
 
     protected function casts(): array
     {
-        return ['active' => 'boolean', 'consent_text' => 'array', 'confirmation_subject' => 'array', 'confirmation_intro' => 'array'];
+        return [
+            'active' => 'boolean',
+            'consent_text' => 'array',
+            'success_text' => 'array',
+            'confirmation_subject' => 'array',
+            'confirmation_intro' => 'array',
+        ];
     }
 
     protected static function newFactory(): NewsletterListFactory

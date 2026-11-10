@@ -15,10 +15,10 @@ use Tok3\SectionEngineNewsletter\Tests\TestCase;
 
 class SubscribeTest extends TestCase
 {
-    protected function formPayload(string $email = 'new@example.org', string $tag = 'topic'): array
+    protected function formPayload(string $email = 'new@example.org', string $tag = 'topic', string $locale = 'en'): array
     {
         NewsletterList::firstOrCreate(['key' => 'news'], ['name' => 'News', 'consent_text' => ['en' => 'Original consent'], 'active' => true]);
-        $html = app(LiveTagRegistry::class)->get('newsletter')->render(new LiveTag('newsletter', 'news', ['tag' => $tag], '{{ newsletter:news }}', true), LiveTokenRenderContext::frontend('en', url: 'http://localhost/example'));
+        $html = app(LiveTagRegistry::class)->get('newsletter')->render(new LiveTag('newsletter', 'news', ['tag' => $tag], '{{ newsletter:news }}', true), LiveTokenRenderContext::frontend($locale, url: 'http://localhost/example'));
         preg_match('/name="context" value="([^"]+)"/', $html, $match);
         $this->travel(4)->seconds();
 
@@ -28,7 +28,9 @@ class SubscribeTest extends TestCase
     public function test_new_signup_is_pending_with_hashed_token_and_full_proof(): void
     {
         $payload = $this->formPayload(' NEW@Example.org ');
-        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::1234'])->withHeader('User-Agent', 'Consent browser')->postJson('/newsletter/subscribe', $payload)->assertOk()->assertJsonStructure(['status', 'message']);
+        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::1234'])->withHeader('User-Agent', 'Consent browser')->postJson('/newsletter/subscribe', $payload)
+            ->assertOk()
+            ->assertJsonPath('message', "Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.");
         $subscription = Subscription::with('subscriber', 'events')->firstOrFail();
         $this->assertSame('new@example.org', $subscription->subscriber->email);
         $this->assertSame(SubscriptionStatus::Pending, $subscription->status);
@@ -60,6 +62,30 @@ class SubscribeTest extends TestCase
         $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
         $this->assertSame(SubscriptionStatus::Pending, $subscription->fresh()->status);
         $this->assertDatabaseHas('section_engine_newsletter_events', ['type' => 'resubscribe_requested']);
+    }
+
+    public function test_json_success_uses_list_override_with_default_locale_fallback(): void
+    {
+        config(['section-engine-newsletter.default_locale' => 'de']);
+        NewsletterList::factory()->create([
+            'key' => 'news',
+            'success_text' => ['de' => 'Eigener Hinweis'],
+        ]);
+
+        $payload = $this->formPayload(locale: 'fr');
+
+        $this->postJson('/newsletter/subscribe', $payload)
+            ->assertOk()
+            ->assertExactJson(['status' => 'success', 'message' => 'Eigener Hinweis']);
+    }
+
+    public function test_json_success_uses_german_default_notice_on_a_german_page(): void
+    {
+        $payload = $this->formPayload(locale: 'de');
+
+        $this->postJson('/newsletter/subscribe', $payload)
+            ->assertOk()
+            ->assertJsonPath('message', 'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung über den Button darin – erst dann bist du eingetragen. Keine E-Mail erhalten? Schau auch im Spam-Ordner nach.');
     }
 
     public function test_invalid_inputs_store_nothing(): void
@@ -122,8 +148,18 @@ class SubscribeTest extends TestCase
         $this->travel(4)->seconds();
         $this->post('/newsletter/subscribe', ['context' => $encrypted, 'email' => 'a@example.org', 'consent' => '1'])->assertRedirect();
         $html = $this->get('/example')->assertOk()->getContent();
-        $this->assertSame(1, substr_count($html, 'Please check your inbox.'));
-        $this->assertStringContainsString('id="newsletter-'.$context['form_id'].'"', $html);
+        $dom = new \DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        $xpath = new \DOMXPath($dom);
+        $notices = $xpath->query('//*[@data-newsletter-success]');
+        $forms = $xpath->query('//*[@data-newsletter-form]');
+
+        $this->assertSame(1, $notices->length);
+        $this->assertSame(1, $forms->length);
+        $this->assertSame('newsletter-'.$context['form_id'], $notices->item(0)?->attributes->getNamedItem('id')?->nodeValue);
+        $this->assertSame('status', $notices->item(0)?->attributes->getNamedItem('role')?->nodeValue);
+        $this->assertTrue($notices->item(0)?->hasAttribute('autofocus'));
+        $this->assertSame("Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.", trim($notices->item(0)?->textContent ?? ''));
     }
 
     public function test_non_js_validation_errors_are_visible_on_the_original_form(): void
