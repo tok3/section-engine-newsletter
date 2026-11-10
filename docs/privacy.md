@@ -18,6 +18,8 @@ Zusätzlich können Laravel, Webserver und Mail-/Queue-Infrastruktur eigene Sess
 
 Für den Produktionsbetrieb wird eine dauerhafte Queue mit laufendem Worker empfohlen. Ohne konfigurierte Queue erfolgt der Versand nach der HTTP-Antwort im terminierenden PHP-Prozess. Die öffentliche Antwort bleibt unabhängig vom Abonnementstatus und von Versand- oder Queue-Einreihungsfehlern gleich. Fehler werden über Laravels `report()` an die Anwendung gemeldet. Ein fehlgeschlagener Mailversand erzeugt keinen `confirmation_sent`-Nachweis; das Pending-Abonnement und das bereits gespeicherte Anforderungsereignis bleiben erhalten. Erst die tatsächliche Übergabe an den Mailer wird als `confirmation_sent` mit den ursprünglichen IP-/User-Agent-Daten protokolliert.
 
+Außerhalb des konfigurierten Wiederholungs-Cooldowns löst jede zulässige Anmeldung eine Bestätigungsmail aus, auch wenn das Abonnement bereits bestätigt ist. Dabei bleibt der bestätigte Status samt ursprünglichen Bestätigungszeitpunkten, IP und User-Agent unverändert; protokolliert werden die neue Anforderung und, bei erfolgreicher Übergabe, der erneute Mailversand. Ein erneuter Bestätigungs-POST verändert den bestehenden Bestätigungsnachweis nicht. Betreiber sollten diese wiederholten transaktionalen Mails in Datenschutzhinweisen, Versandvolumen und Missbrauchsbeobachtung berücksichtigen.
+
 ## Aufbewahrung und Löschung
 
 `section-engine-newsletter:prune` wird täglich über den Laravel-Scheduler aufgerufen:

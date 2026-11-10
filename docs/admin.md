@@ -2,9 +2,11 @@
 
 ## Listen
 
-Unter „Newsletter → Listen“ Listen anlegen, bearbeiten und deaktivieren. Ein Schlüssel ist eindeutig und enthält ausschließlich `[a-z0-9_-]`. Der Einwilligungstext in `default_locale` ist Pflicht. Für Deutsch und Englisch stehen Textfelder bereit; die konfigurierbare Standardsprache wird zusätzlich berücksichtigt. Betreff und Einleitung der Bestätigungsmail lassen sich pro Sprache überschreiben. Leere Overrides verwenden die Pakettexte.
+Unter „Newsletter → Listen“ Listen anlegen, bearbeiten und deaktivieren. Ein Schlüssel ist eindeutig und enthält ausschließlich `[a-z0-9_-]`. Der Editor übernimmt ausschließlich die Schlüssel und Anzeigenamen aus `section-engine.locales.available`; der Einwilligungstext für `section-engine.locales.default` ist Pflicht. Bei einer Website-Sprache erscheinen die Felder ohne Sprachsuffix, bei mehreren Sprachen in einem benannten Tab pro Sprache.
 
-Die Tabelle zeigt Bestätigt/Pending/Abgemeldet getrennt und bietet einen kopierbaren Einbettungscode. Die Bearbeitungsseite zeigt gespeicherte Einbindungen über den Core-Usage-Finder, einschließlich Entwürfen und archivierten Inhalten. Löschen archiviert die Liste per Soft Delete; vorhandene Abonnements und Nachweise bleiben erhalten.
+Für jede Website-Sprache stehen Einwilligungstext, Erfolgshinweis nach dem Absenden, Betreff und Einleitung der Bestätigungsmail bereit. Beim Anlegen sind deutsche, englische und spanische Texte bereits editierbar ausgefüllt; andere Sprachen erhalten englische Vorbelegungen. Gespeicherte Werte sind normale Listeninhalte und lassen sich vollständig ändern. Fehlende Werte fallen bei der Ausgabe von der Seitensprache auf die Standardsprache und danach auf die Paketübersetzung zurück. `section-engine-newsletter.default_locale` ist standardmäßig `null` und übernimmt damit die Core-Standardsprache; ein expliziter Paketwert bleibt als abwärtskompatibler Text-Fallback wirksam.
+
+Die Tabelle zeigt Bestätigt/Pending/Abgemeldet getrennt und bietet einen kopierbaren Einbettungscode. Nur die Bearbeitungsseite enthält den Abschnitt „Eingebunden auf“. Er zeigt gespeicherte Einbindungen mit Bearbeitungslinks über den Core-Usage-Finder, einschließlich Entwürfen und archivierten Inhalten, oder einen eindeutigen Leerzustand. Löschen archiviert die Liste per Soft Delete; vorhandene Abonnements und Nachweise bleiben erhalten.
 
 ## Teilnehmer und Filter
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 - 2026-11-10
+
+- Nach einer Anmeldung ersetzt ein fokussierter, barrierefreier Hinweis genau die abgesendete Formularinstanz; der Text ist pro Liste und Sprache überschreibbar.
+- Zulässige Anfragen außerhalb des Cooldowns versenden auch für bereits bestätigte Abonnements eine neue Bestätigungsmail, ohne Status oder Bestätigungsnachweis zu verändern.
+- Der Filament-Listeneditor folgt den in Section Engine konfigurierten Website-Sprachen, nutzt bei mehreren Sprachen Tabs und zeigt gespeicherte Einbindungen nur beim Bearbeiten.
+- Neue Listen erhalten editierbare Standardtexte für Deutsch, Englisch und Spanisch; weitere Website-Sprachen verwenden englische Vorbelegungen.
+- Vollständige spanische Übersetzungen für Formular, Hinweise, Bestätigungsmail, Theme-Seiten und Verwaltung.
+
 ## 1.1.0 - 2026-11-09
 
 - Bestätigungs-, Ablauf-, Abmelde- und Ergebnisseiten werden mit korrekten Statuscodes und `noindex, nofollow` im konfigurierten Section-Engine-Theme dargestellt.

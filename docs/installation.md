@@ -86,7 +86,7 @@ php artisan vendor:publish --tag=section-engine-newsletter-views
 php artisan vendor:publish --tag=section-engine-newsletter-translations
 ```
 
-Deutsch und Englisch sind enthalten. `default_locale` muss mit mindestens einem Einwilligungstext jeder Liste übereinstimmen. CSRF- und Session-Middleware sind erforderlich. Nur der signierte RFC-8058-One-Click-Endpunkt ist von CSRF ausgenommen. Für vollständig gecachte Seiten muss ein frischer, sitzungsgebundener Formularbereich vorgesehen werden; Formularkontexte sind zeitlich begrenzt und enthalten CSRF-Tokens.
+Deutsch, Englisch und Spanisch sind vollständig enthalten. Der Listeneditor übernimmt die Website-Sprachen aus `section-engine.locales.available`; der Einwilligungstext für `section-engine.locales.default` ist Pflicht. Neue Listen werden in den drei mitgelieferten Sprachen vorbefüllt, andere konfigurierte Sprachen mit englischen Texten. `section-engine-newsletter.default_locale` bleibt optional: `null` übernimmt die Core-Standardsprache, ein expliziter Wert bleibt als Text-Fallback erhalten. CSRF- und Session-Middleware sind erforderlich. Nur der signierte RFC-8058-One-Click-Endpunkt ist von CSRF ausgenommen. Für vollständig gecachte Seiten muss ein frischer, sitzungsgebundener Formularbereich vorgesehen werden; Formularkontexte sind zeitlich begrenzt und enthalten CSRF-Tokens.
 
 ## Entfernung
 

@@ -63,9 +63,9 @@
 - [x] Commit `feat: default list texts in german, english and spanish`
 
 ### Task 5 – Docs and release prep
-- [ ] `docs/admin.md` (list editor, languages, defaults), `docs/embedding.md` (notice, language behaviour), `docs/privacy.md` (repeated confirmation mails). CHANGELOG `## 1.2.0 - <date>`, commit `chore: release 1.2.0` (no tag).
-- [ ] Full matrix; manual check in `~/Sites/leibnizer` is **not** allowed (live data) – use the Workbench and, if needed, `~/Sites/leibnizer-dev` locally with full revert as in earlier tasks.
-- [ ] Handoff note at the end of this file. No push, no tag.
+- [x] `docs/admin.md` (list editor, languages, defaults), `docs/embedding.md` (notice, language behaviour), `docs/privacy.md` (repeated confirmation mails). CHANGELOG `## 1.2.0 - <date>`, commit `chore: release 1.2.0` (no tag).
+- [x] Full matrix; manual check in `~/Sites/leibnizer` is **not** allowed (live data) – use the Workbench and, if needed, `~/Sites/leibnizer-dev` locally with full revert as in earlier tasks.
+- [x] Handoff note at the end of this file. No push, no tag.
 
 ## Review Focus (Claude review after the build)
 
@@ -73,3 +73,27 @@
 - Confirmed subscriptions never downgraded.
 - Editor: only site languages, tabs when multilingual, defaults prefilled.
 - es output end to end.
+
+## Übergabenotiz — Build abgeschlossen (2026-11-10)
+
+Tasks 1–5 sind in der vorgegebenen Reihenfolge und mit je einem eigenen Commit umgesetzt. Produktionsänderungen wurden jeweils zuerst durch einen fehlschlagenden Test abgesichert. Die Fixed Decisions wurden unverändert übernommen; es war keine zusätzliche Core-Schnittstelle nötig.
+
+### Gebaut
+
+- Bereits bestätigte Abonnements erhalten außerhalb des Cooldowns einen neuen Bestätigungslink, ohne Status oder ursprünglichen Bestätigungsnachweis zu verändern; die öffentlichen Antworten bleiben identisch.
+- Nach erfolgreichem Absenden ersetzt ein fokussierter Statushinweis nur die betreffende Formularinstanz, mit und ohne JavaScript. `success_text` ist über eine additive Migration pro Liste und Locale überschreibbar.
+- Der Filament-Listeneditor folgt `section-engine.locales.available`, verlangt den Einwilligungstext der Core-Standardsprache, verwendet bei mehreren Sprachen benannte Tabs und zeigt Einbindungen nur beim Bearbeiten über `LiveTagUsageFinder`.
+- Neue Listen sind für `de`, `en` und `es` vollständig vorbefüllt; unbekannte Website-Sprachen erhalten englische Texte. Formular, Hinweis, Mail und Theme-Seiten verwenden die Locale der Anmeldeseite. Spanische Frontend-, Mail-, Seiten- und Admintexte sind vollständig enthalten.
+- Öffentliche Dokumentation und `CHANGELOG.md` sind für `1.2.0 - 2026-11-10` aktualisiert.
+
+### Verifikation
+
+- `composer validate --strict`: erfolgreich.
+- `composer test`: **139 Tests / 1072 Assertions**, erfolgreich.
+- `npm test`: **7/7**, keine übersprungenen Tests.
+- `composer format:check`: erfolgreich.
+- `composer analyse`: **38 Dateien**, keine Fehler und keine neue Unterdrückung.
+- Composer-Archiv: **105 Dateien**; `docs/superpowers/**`, `.superpowers/**` und `AGENTS.md` sind ausgeschlossen.
+- Die Filament-/Livewire-Prüfungen laufen über den registrierten Testbench-Workbench-Provider. Eine zusätzliche Verbraucherprüfung war nicht erforderlich. `~/Sites/leibnizer` und `~/Sites/leibnizer-dev` wurden nicht verändert.
+
+Kein Push und kein Tag. Es bestehen keine Implementierungsblocker. Die Prüfung gegen **Review Focus** wurde wie beauftragt nicht durchgeführt und bleibt bei Claude.

@@ -4,7 +4,7 @@
 
 ## Voraussetzungen
 
-PHP 8.3+, Laravel 11–13, Filament 5, Section Engine `^1.1.0`, eine relationale Datenbank und ein Laravel-Mailer. Das Paket ist privat und benötigt Composer-Zugriff auf die Paketquelle und Section Engine. Es wird kein npm- oder Build-Schritt für die Installation benötigt.
+PHP 8.3+, Laravel 11–13, Filament 5, Section Engine `^1.3.0`, eine relationale Datenbank und ein Laravel-Mailer. Das Paket ist privat und benötigt Composer-Zugriff auf die Paketquelle und Section Engine. Es wird kein npm- oder Build-Schritt für die Installation benötigt.
 
 ## Schnellstart
 

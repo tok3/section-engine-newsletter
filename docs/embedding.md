@@ -2,7 +2,7 @@
 
 ## Liste vorbereiten
 
-Eine Liste muss in Filament existieren, aktiv sein und einen Einwilligungstext mindestens in der konfigurierten Standardsprache besitzen. Der Schlüssel ist eine eindeutige Zeichenfolge aus Kleinbuchstaben, Ziffern, Bindestrich und Unterstrich. Den Schlüssel nach bestehenden Einbindungen möglichst nicht ändern, da diese den Schlüssel speichern.
+Eine Liste muss in Filament existieren, aktiv sein und einen Einwilligungstext mindestens in der unter `section-engine.locales.default` konfigurierten Standardsprache besitzen. Der Editor zeigt nur die Sprachen aus `section-engine.locales.available` und befüllt neue Listen mit editierbaren Standardtexten. Der Schlüssel ist eine eindeutige Zeichenfolge aus Kleinbuchstaben, Ziffern, Bindestrich und Unterstrich. Den Schlüssel nach bestehenden Einbindungen möglichst nicht ändern, da diese den Schlüssel speichern.
 
 In eine HTML-Section, den HTML-Quelltext einer Smart Section oder ein HTML-Live-Token-Snippet einfügen:
 
@@ -18,11 +18,15 @@ Das erste Argument bezeichnet den Listenschlüssel. `tag` ist eine optionale fre
 
 ## Was Besucher sehen
 
-Ein sichtbares E-Mail-Label, den Einwilligungstext, standardmäßig eine Pflicht-Checkbox und den Anmeldebutton. Nach dem Absenden erscheint immer dieselbe allgemeine Rückmeldung – auch für bereits bekannte Adressen. Eine Bestätigungsmail wird für neue und erneut angemeldete Adressen versendet; bei bereits offenen Anmeldungen gilt standardmäßig eine zehnminütige Wiederholungssperre. Bereits bestätigte Adressen erhalten keine neue Mail.
+Ein sichtbares E-Mail-Label, den Einwilligungstext, standardmäßig eine Pflicht-Checkbox und den Anmeldebutton. Nach dem Absenden wird genau diese Formularinstanz durch einen fokussierten Hinweis mit `role="status"` ersetzt. Der Hinweis fordert eindeutig zur Bestätigung über die E-Mail auf und bleibt für alle Adresszustände identisch; sein Text lässt sich pro Liste und Sprache bearbeiten.
+
+Jede zulässige Anmeldung außerhalb der standardmäßig zehnminütigen Wiederholungssperre erhält eine Bestätigungsmail – auch eine bereits bestätigte Adresse. Deren Status bleibt bestätigt, der ursprüngliche Bestätigungsnachweis unverändert und ein erneuter Klick auf den neuen Link harmlos. Innerhalb des Cooldowns wird keine weitere Mail angefordert; die öffentliche Antwort bleibt in allen Fällen gleich.
 
 Der Mail-Link öffnet eine Seite im vorhandenen Website-Theme mit Bestätigungsbutton. Erst dieser POST bestätigt das Abonnement. Danach kehren Besucher zur ursprünglichen Seite zurück, sofern deren Schema und Host zu `APP_URL` passen. Dort ersetzt eine fokussierte Erfolgsmeldung alle Formulare derselben Liste; Formulare anderer Listen bleiben stehen. Bei fehlender oder fremder Herkunft erscheint stattdessen eine Ergebnisseite im Website-Theme. Der Link gilt standardmäßig 48 Stunden; abgelaufene Links zeigen mit HTTP 410 ein neues Anmeldeformular an. Eine Abmeldung erfolgt ebenfalls über eine signierte Theme-Seite mit POST-Button. Eine erneute Anmeldung benötigt wieder Double Opt-in.
 
-Ohne JavaScript funktioniert das Formular über einen Redirect zur eigenen Formularinstanz. Mit JavaScript werden Status und Validierungsfehler im Formular angezeigt und der Fokus auf den Status beziehungsweise das erste fehlerhafte Feld gesetzt. Mehrere Formulare auf einer Seite sind möglich.
+Ohne JavaScript funktioniert das Formular über einen Redirect und ersetzt danach nur die abgesendete Instanz durch den fokussierbaren Hinweis. Mit JavaScript geschieht derselbe Austausch unmittelbar; Validierungs- und Netzwerkfehler bleiben im Formular und erhalten den Fokus. Mehrere Formulare auf einer Seite sind möglich.
+
+Formular, Absendehinweis, Bestätigungsmail sowie Bestätigungs- und Abmeldeseiten verwenden die Locale der Seite, auf der das Formular ausgegeben wurde. Für listenbezogene Texte gilt: Seitensprache → aufgelöste Standardsprache → Paketübersetzung. Ohne explizites `section-engine-newsletter.default_locale` ist die aufgelöste Standardsprache `section-engine.locales.default`; ein expliziter Paketwert bleibt als Fallback erhalten. Das Paket liefert vollständige Texte für `de`, `en` und `es`.
 
 ## Gestaltung
 
@@ -109,6 +113,6 @@ Im Editor sind die Formularcontrols deaktiviert und ein Hinweis nennt Liste und 
 - Markierter Platzhalter: Liste fehlt oder ist inaktiv; Core meldet Renderfehler im Laravel-Log.
 - Keine Mail: Mailer, Queue-Worker, Spamordner, Cooldown und Abonnementstatus prüfen. Die öffentliche Rückmeldung verrät den Status absichtlich nicht.
 - Ungültiges Formular: Seite neu laden; Mindestfüllzeit standardmäßig drei Sekunden, Kontextlaufzeit sieben Tage. CSRF-/Session-Konfiguration und Seiten-Caching prüfen.
-- Falsche Sprache: Seiten-/Preview-Locale und `default_locale` sowie Listentexte und veröffentlichte Übersetzungen prüfen.
+- Falsche Sprache: Seiten-/Preview-Locale, `section-engine.locales.available`, `section-engine.locales.default`, einen optionalen expliziten Paketwert `default_locale` sowie Listentexte und veröffentlichte Übersetzungen prüfen.
 
 Provider-Tags als normalen Text außerhalb von HTML-Attributen, Kommentaren, Script-, Style- oder Textarea-Bereichen einsetzen. Zum wörtlichen Anzeigen die öffnenden Klammern als `&#123;&#123;` schreiben.
