@@ -118,3 +118,7 @@ For an already confirmed subscription, `RequestSubscription::handle()` keeps sta
 Task 6 wurde test-first umgesetzt. Die additive Migration ergänzt `last_requested_at` und übernimmt für bestehende Datensätze den Wert aus `requested_at`. Bestätigte Abonnements behalten bei einer erneuten Anmeldung sämtliche bisherigen Herkunfts-, Einwilligungs-, Anfrage-, Bestätigungs- und Zeitstempeldaten; geändert werden ausschließlich Bestätigungstoken, Ablaufzeit und Cooldown-Marker. Die neue Anfrage bleibt mit Tag, Seite, URL, IP, User-Agent, Einwilligungstext und Locale vollständig im unveränderlichen `requested`-Event dokumentiert. Pending- und Resubscribe-Abläufe aktualisieren `requested_at` und `last_requested_at` gemeinsam; für Altdaten greift der Cooldown auf `requested_at` zurück.
 
 Vollständige Prüfmatrix: `composer validate --strict` erfolgreich; `composer test` **141 Tests / 1105 Assertions**; `npm test` **7/7**; `composer format:check` erfolgreich; `composer analyse` **38 Dateien**, keine Fehler; `git diff --check` erfolgreich. `CHANGELOG.md` bleibt unverändert bei 1.2.0. Kein Push, kein Tag.
+
+## Claude re-review — 2026-11-10 (commit 847557f)
+
+**Result: approved for release v1.2.0.** Confirmed rows change only token, expiry and `last_requested_at` (timestamps suppressed); the full new request lives in its event. Cooldown uses `last_requested_at` with fallback. Removed/rewritten assertions in `ConfirmationTest`/`SubscribeTest` reflect the intended new behaviour (confirmed `requested_at` must no longer move), not a weakening. JS 7/7 re-run by Claude.
