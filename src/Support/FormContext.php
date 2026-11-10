@@ -9,6 +9,11 @@ use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 
 class FormContext
 {
+    public static function defaultLocale(): string
+    {
+        return (string) (config('section-engine-newsletter.default_locale') ?: config('section-engine.locales.default', 'en'));
+    }
+
     public static function normalizeTag(?string $tag): ?string
     {
         $tag = $tag === null ? '' : strtolower($tag);
@@ -19,7 +24,7 @@ class FormContext
     /** @param array<string, string>|null $texts */
     public static function localized(?array $texts, string $locale, string $fallback = ''): string
     {
-        return $texts[$locale] ?? $texts[config('section-engine-newsletter.default_locale', 'en')] ?? $fallback;
+        return $texts[$locale] ?? $texts[static::defaultLocale()] ?? $fallback;
     }
 
     /** @return array{list: string, tag: ?string, page_id: mixed, url: string, locale: string, form_id: string, rendered_at: int, consent_snapshot: string, instance: int} */

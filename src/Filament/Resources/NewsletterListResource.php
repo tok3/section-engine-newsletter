@@ -8,6 +8,9 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -45,23 +48,66 @@ class NewsletterListResource extends AuthorizedResource
 
     public static function form(Schema $schema): Schema
     {
-        $fields = [TextInput::make('key')->label(__('section-engine-newsletter::admin.key'))->required()->maxLength(255)->regex('/\A[a-z0-9_-]+\z/')->unique(ignoreRecord: true),
-            TextInput::make('name')->label(__('section-engine-newsletter::admin.name'))->required()->maxLength(255),
-            Textarea::make('description')->label(__('section-engine-newsletter::admin.description')),
-            Toggle::make('active')->label(__('section-engine-newsletter::admin.active'))->default(true)];
-        foreach (array_unique(['de', 'en', config('section-engine-newsletter.default_locale')]) as $locale) {
-            $fields[] = Textarea::make('consent_text.'.$locale)->label(__('section-engine-newsletter::admin.consent').' ('.$locale.')')->required($locale === config('section-engine-newsletter.default_locale'));
-            $fields[] = TextInput::make('confirmation_subject.'.$locale)->label(__('section-engine-newsletter::admin.subject').' ('.$locale.')')->maxLength(255);
-            $fields[] = Textarea::make('confirmation_intro.'.$locale)->label(__('section-engine-newsletter::admin.intro').' ('.$locale.')');
-        }
-        $fields[] = Placeholder::make('usage')->label(__('section-engine-newsletter::admin.embedded_on'))->content(fn (?NewsletterList $record) => $record ? static::usageHtml($record) : '');
+        /** @var array<string, string> $locales */
+        $locales = config('section-engine.locales.available', []);
+        $defaultLocale = (string) config('section-engine.locales.default', 'en');
+        $textComponents = count($locales) === 1
+            ? self::localeFields((string) array_key_first($locales), $defaultLocale)
+            : [Tabs::make()
+                ->key('locale-tabs', isInheritable: false)
+                ->tabs(collect($locales)->map(
+                    fn (string $label, string $locale): Tab => Tab::make($label)
+                        ->key('locale-'.$locale, isInheritable: false)
+                        ->schema(self::localeFields($locale, $defaultLocale)),
+                )->values()->all())];
 
-        return $schema->components($fields);
+        return $schema->components([
+            Section::make(__('section-engine-newsletter::admin.list_section'))
+                ->key('list-section', isInheritable: false)
+                ->schema([
+                    TextInput::make('key')->label(__('section-engine-newsletter::admin.key'))->helperText(__('section-engine-newsletter::admin.key_help'))->required()->maxLength(255)->regex('/\A[a-z0-9_-]+\z/')->unique(ignoreRecord: true),
+                    TextInput::make('name')->label(__('section-engine-newsletter::admin.name'))->helperText(__('section-engine-newsletter::admin.name_help'))->required()->maxLength(255),
+                    Toggle::make('active')->label(__('section-engine-newsletter::admin.active'))->helperText(__('section-engine-newsletter::admin.active_help'))->default(true),
+                    Textarea::make('description')->label(__('section-engine-newsletter::admin.description'))->helperText(__('section-engine-newsletter::admin.description_help')),
+                ]),
+            Section::make(__('section-engine-newsletter::admin.texts_section'))
+                ->key('texts-section', isInheritable: false)
+                ->schema($textComponents),
+            Section::make(__('section-engine-newsletter::admin.embedded_on'))
+                ->key('usage-section', isInheritable: false)
+                ->visibleOn('edit')
+                ->schema([
+                    Placeholder::make('usage')->hiddenLabel()->content(fn (?NewsletterList $record) => $record ? static::usageHtml($record) : ''),
+                ]),
+        ]);
+    }
+
+    /** @return array<int, Textarea|TextInput> */
+    private static function localeFields(string $locale, string $defaultLocale): array
+    {
+        return [
+            Textarea::make('consent_text.'.$locale)
+                ->label(__('section-engine-newsletter::admin.consent'))
+                ->helperText(__('section-engine-newsletter::admin.consent_help'))
+                ->required($locale === $defaultLocale),
+            Textarea::make('success_text.'.$locale)
+                ->label(__('section-engine-newsletter::admin.success'))
+                ->helperText(__('section-engine-newsletter::admin.success_help')),
+            TextInput::make('confirmation_subject.'.$locale)
+                ->label(__('section-engine-newsletter::admin.subject'))
+                ->helperText(__('section-engine-newsletter::admin.subject_help'))
+                ->maxLength(255),
+            Textarea::make('confirmation_intro.'.$locale)
+                ->label(__('section-engine-newsletter::admin.intro'))
+                ->helperText(__('section-engine-newsletter::admin.intro_help')),
+        ];
     }
 
     public static function usageHtml(NewsletterList $list): HtmlString
     {
-        return new HtmlString(app(LiveTagUsageFinder::class)->usagesFor('newsletter', $list->key)->map(fn ($usage): string => '<p>'.($usage['url'] ? '<a href="'.e($usage['url']).'">'.e($usage['label']).'</a>' : e($usage['label'])).' ('.e($usage['status']).')</p>')->implode(''));
+        $html = app(LiveTagUsageFinder::class)->usagesFor('newsletter', $list->key)->map(fn ($usage): string => '<p>'.($usage['url'] ? '<a href="'.e($usage['url']).'">'.e($usage['label']).'</a>' : e($usage['label'])).' ('.e($usage['status']).')</p>')->implode('');
+
+        return new HtmlString($html !== '' ? $html : '<p>'.e(__('section-engine-newsletter::admin.no_embeds')).'</p>');
     }
 
     public static function table(Table $table): Table

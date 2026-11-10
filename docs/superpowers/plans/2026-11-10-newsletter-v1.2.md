@@ -53,9 +53,9 @@
 - [x] Commit `feat: clear success notice after newsletter signup`
 
 ### Task 3 – Languages from Section Engine and list editor layout
-- [ ] Decisions 3 and 4.
-- [ ] Tests: single locale → no tabs, no suffixes; three locales → three tabs with names; required only for default locale; explicit package `default_locale` still respected; "Eingebunden auf" only on edit.
-- [ ] Commit `feat: list editor follows site languages`
+- [x] Decisions 3 and 4.
+- [x] Tests: single locale → no tabs, no suffixes; three locales → three tabs with names; required only for default locale; explicit package `default_locale` still respected; "Eingebunden auf" only on edit.
+- [x] Commit `feat: list editor follows site languages`
 
 ### Task 4 – Default texts and Spanish
 - [ ] Decisions 5, 6, 7.

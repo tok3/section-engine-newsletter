@@ -2,7 +2,7 @@
 
 return [
     'route_prefix' => 'newsletter',
-    'default_locale' => 'en',
+    'default_locale' => null,
     'mailer' => null,
     'queue' => null,
     'from' => ['address' => null, 'name' => null],

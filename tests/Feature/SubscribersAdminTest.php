@@ -22,6 +22,24 @@ use Tok3\SectionEngineNewsletter\Tests\Fixtures\AlternatePage;
 
 class SubscribersAdminTest extends AdminTestCase
 {
+    public function test_manual_add_uses_resolved_default_locale(): void
+    {
+        config([
+            'section-engine.locales.default' => 'de',
+            'section-engine-newsletter.default_locale' => null,
+        ]);
+
+        Livewire::test(ListSubscribers::class)
+            ->mountAction('add')
+            ->assertActionDataSet(['locale' => 'de']);
+
+        config(['section-engine-newsletter.default_locale' => 'en']);
+
+        Livewire::test(ListSubscribers::class)
+            ->mountAction('add')
+            ->assertActionDataSet(['locale' => 'en']);
+    }
+
     public function test_manual_add_only_requests_confirmation_and_logs_actor(): void
     {
         Mail::fake();

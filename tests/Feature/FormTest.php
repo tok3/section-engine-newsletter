@@ -9,6 +9,7 @@ use Tok3\SectionEngine\Support\LiveTagRegistry;
 use Tok3\SectionEngine\Support\LiveTokenRenderContext;
 use Tok3\SectionEngine\Support\PageRenderer;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
+use Tok3\SectionEngineNewsletter\Support\FormContext;
 use Tok3\SectionEngineNewsletter\Tests\TestCase;
 
 class FormTest extends TestCase
@@ -39,6 +40,21 @@ class FormTest extends TestCase
         foreach (['<label for=', 'aria-describedby=', 'aria-live="polite"', 'name="website"', 'tabindex="-1"', 'method="post"', 'name="_token"'] as $needle) {
             $this->assertStringContainsString($needle, $html);
         }
+    }
+
+    public function test_text_fallback_uses_core_default_unless_package_default_is_explicit(): void
+    {
+        config([
+            'section-engine.locales.default' => 'de',
+            'section-engine-newsletter.default_locale' => null,
+        ]);
+        $texts = ['de' => 'Deutsch', 'en' => 'English'];
+
+        $this->assertSame('Deutsch', FormContext::localized($texts, 'fr'));
+
+        config(['section-engine-newsletter.default_locale' => 'en']);
+
+        $this->assertSame('English', FormContext::localized($texts, 'fr'));
     }
 
     public function test_invalid_tag_is_dropped_without_hiding_form(): void
