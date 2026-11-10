@@ -32,6 +32,11 @@ class FormContext
     {
         $instance = request()->attributes->get('newsletter_form_instance', 0);
         request()->attributes->set('newsletter_form_instance', $instance + 1);
+        $consent = self::localized(
+            $list->consent_text,
+            $context->locale,
+            ListTextDefaults::forLocale($context->locale)['consent_text'],
+        );
 
         return [
             'instance' => $instance,
@@ -42,7 +47,7 @@ class FormContext
             'locale' => $context->locale,
             'form_id' => bin2hex(random_bytes(8)),
             'rendered_at' => now()->timestamp,
-            'consent_snapshot' => self::localized($list->consent_text, $context->locale).(config('section-engine-newsletter.require_checkbox') ? "\n".__('section-engine-newsletter::newsletter.checkbox', [], $context->locale) : ''),
+            'consent_snapshot' => $consent.(config('section-engine-newsletter.require_checkbox') ? "\n".__('section-engine-newsletter::newsletter.checkbox', [], $context->locale) : ''),
         ];
     }
 

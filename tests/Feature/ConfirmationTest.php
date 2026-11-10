@@ -4,6 +4,7 @@ namespace Tok3\SectionEngineNewsletter\Tests\Feature;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tok3\SectionEngine\Support\LiveTag;
 use Tok3\SectionEngine\Support\LiveTagRegistry;
@@ -47,6 +48,58 @@ class ConfirmationTest extends SubscribeTest
         Subscription::first()->update(['status' => 'confirmed']);
         $this->postJson('/newsletter/subscribe', $payload)->assertOk();
         Mail::assertSentCount(2);
+    }
+
+    public function test_spanish_signup_uses_spanish_for_notice_mail_and_theme_pages(): void
+    {
+        Mail::fake();
+        config(['section-engine.locales.available' => ['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español']]);
+        NewsletterList::factory()->create([
+            'key' => 'news',
+            'consent_text' => ['es' => 'Quiero recibir novedades por correo electrónico.'],
+        ]);
+        $formHtml = app(LiveTagRegistry::class)->get('newsletter')->render(
+            new LiveTag('newsletter', 'news', [], '{{ newsletter:news }}', true),
+            LiveTokenRenderContext::frontend('es', url: 'http://localhost/example'),
+        );
+        foreach (['lang="es"', 'Correo electrónico', 'Quiero recibir novedades por correo electrónico.', 'Acepto recibir este boletín.', 'Suscribirme'] as $text) {
+            $this->assertStringContainsString($text, $formHtml);
+        }
+
+        $this->postJson('/newsletter/subscribe', $this->formPayload(locale: 'es'))
+            ->assertOk()
+            ->assertJsonPath('message', '¡Casi listo! Te hemos enviado un correo electrónico. Confirma tu suscripción con el botón que contiene; solo entonces quedarás suscrito. ¿No has recibido el correo? Revisa también la carpeta de spam.');
+
+        $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
+        $this->assertSame('es', $mail->locale);
+        $mailHtml = $mail->render();
+        $this->assertStringContainsString('Confirma tu suscripción al boletín', $mail->subject);
+        $this->assertStringContainsString('Confirma que deseas recibir este boletín.', $mailHtml);
+        $this->assertStringContainsString('Confirmar suscripción', $mailHtml);
+
+        $subscription = Subscription::firstOrFail();
+        $confirmationUrl = '/newsletter/confirm/'.$subscription->id.'/'.$mail->token;
+        $this->get($confirmationUrl)
+            ->assertOk()
+            ->assertSee('<html lang="es">', false)
+            ->assertSee('Confirmar la suscripción al boletín');
+
+        $subscription->update(['source_url' => null]);
+        $this->post($confirmationUrl)
+            ->assertOk()
+            ->assertSee('<html lang="es">', false)
+            ->assertSee('Tu suscripción al boletín está confirmada.');
+
+        $unsubscribeUrl = URL::signedRoute('section-engine-newsletter.unsubscribe.show', ['subscription' => $subscription]);
+        $this->get($unsubscribeUrl)
+            ->assertOk()
+            ->assertSee('<html lang="es">', false)
+            ->assertSee('Darse de baja del boletín')
+            ->assertSee('Darme de baja');
+        $this->post($unsubscribeUrl)
+            ->assertOk()
+            ->assertSee('<html lang="es">', false)
+            ->assertSee('Te has dado de baja.');
     }
 
     public function test_confirmed_subscription_outside_cooldown_gets_new_mail_without_losing_confirmation_proof(): void

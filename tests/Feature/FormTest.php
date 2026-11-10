@@ -57,6 +57,25 @@ class FormTest extends TestCase
         $this->assertSame('English', FormContext::localized($texts, 'fr'));
     }
 
+    public function test_consent_falls_back_to_package_translation_when_list_locales_are_missing(): void
+    {
+        config([
+            'section-engine.locales.default' => 'fr',
+            'section-engine.locales.available' => ['fr' => 'Français'],
+            'section-engine-newsletter.default_locale' => null,
+        ]);
+        NewsletterList::factory()->create(['key' => 'news', 'consent_text' => []]);
+        $html = app(LiveTagRegistry::class)->get('newsletter')->render(
+            new LiveTag('newsletter', 'news', [], '{{ newsletter:news }}', true),
+            LiveTokenRenderContext::frontend('fr', url: 'https://example.org/news'),
+        );
+
+        $this->assertStringContainsString('I would like to receive newsletter updates.', $html);
+        preg_match('/name="context" value="([^"]+)"/', $html, $match);
+        $context = json_decode(Crypt::decryptString(html_entity_decode($match[1])), true);
+        $this->assertStringContainsString('I would like to receive newsletter updates.', $context['consent_snapshot']);
+    }
+
     public function test_invalid_tag_is_dropped_without_hiding_form(): void
     {
         NewsletterList::factory()->create(['key' => 'news']);

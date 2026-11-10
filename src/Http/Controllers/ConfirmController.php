@@ -12,6 +12,7 @@ use Tok3\SectionEngineNewsletter\Enums\SubscriptionStatus;
 use Tok3\SectionEngineNewsletter\Events\SubscriptionConfirmed;
 use Tok3\SectionEngineNewsletter\Models\Subscription;
 use Tok3\SectionEngineNewsletter\Support\FormContext;
+use Tok3\SectionEngineNewsletter\Support\ListTextDefaults;
 use Tok3\SectionEngineNewsletter\Support\SafeSourceUrl;
 
 class ConfirmController
@@ -34,7 +35,7 @@ class ConfirmController
             $data = $context->create($subscription->list, LiveTokenRenderContext::frontend($subscription->source_locale, url: request()->url()), $subscription->tag);
             $form = view('section-engine-newsletter::form.default', [
                 'list' => $subscription->list, 'data' => $data, 'encryptedContext' => $context->encrypt($data), 'preview' => false,
-                'variant' => 'default', 'includeScript' => false, 'consent' => FormContext::localized($subscription->list->consent_text, $subscription->source_locale),
+                'variant' => 'default', 'includeScript' => false, 'consent' => FormContext::localized($subscription->list->consent_text, $subscription->source_locale, ListTextDefaults::forLocale($subscription->source_locale)['consent_text']),
                 'includeStyles' => false, 'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox', [], $subscription->source_locale), 'feedback' => [],
             ])->render();
         }

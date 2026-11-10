@@ -8,6 +8,7 @@ use Tok3\SectionEngine\Support\LiveTag;
 use Tok3\SectionEngine\Support\LiveTokenRenderContext;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 use Tok3\SectionEngineNewsletter\Support\FormContext;
+use Tok3\SectionEngineNewsletter\Support\ListTextDefaults;
 
 class NewsletterLiveTagProvider implements LiveTagProvider
 {
@@ -79,7 +80,7 @@ class NewsletterLiveTagProvider implements LiveTagProvider
             'list' => $list, 'data' => $data, 'encryptedContext' => $formContext->encrypt($data),
             'preview' => $context->editorPreview, 'variant' => $variant, 'includeScript' => $includeScript,
             'includeStyles' => $includeStyles,
-            'consent' => FormContext::localized($list->consent_text, $context->locale),
+            'consent' => FormContext::localized($list->consent_text, $context->locale, ListTextDefaults::forLocale($context->locale)['consent_text']),
             'checkboxLabel' => __('section-engine-newsletter::newsletter.checkbox', [], $context->locale),
         ])->render();
     }

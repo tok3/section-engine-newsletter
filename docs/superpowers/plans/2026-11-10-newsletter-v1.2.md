@@ -58,9 +58,9 @@
 - [x] Commit `feat: list editor follows site languages`
 
 ### Task 4 – Default texts and Spanish
-- [ ] Decisions 5, 6, 7.
-- [ ] Tests: create form prefilled for de/en/es; unknown site language falls back to en texts; mail, notice and pages render in es when signing up on an es page.
-- [ ] Commit `feat: default list texts in german, english and spanish`
+- [x] Decisions 5, 6, 7.
+- [x] Tests: create form prefilled for de/en/es; unknown site language falls back to en texts; mail, notice and pages render in es when signing up on an es page.
+- [x] Commit `feat: default list texts in german, english and spanish`
 
 ### Task 5 – Docs and release prep
 - [ ] `docs/admin.md` (list editor, languages, defaults), `docs/embedding.md` (notice, language behaviour), `docs/privacy.md` (repeated confirmation mails). CHANGELOG `## 1.2.0 - <date>`, commit `chore: release 1.2.0` (no tag).

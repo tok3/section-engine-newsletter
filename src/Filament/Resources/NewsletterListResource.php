@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use Tok3\SectionEngine\Support\LiveTagUsageFinder;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
+use Tok3\SectionEngineNewsletter\Support\ListTextDefaults;
 
 /** @extends AuthorizedResource<NewsletterList> */
 class NewsletterListResource extends AuthorizedResource
@@ -85,21 +86,27 @@ class NewsletterListResource extends AuthorizedResource
     /** @return array<int, Textarea|TextInput> */
     private static function localeFields(string $locale, string $defaultLocale): array
     {
+        $defaults = ListTextDefaults::forLocale($locale);
+
         return [
             Textarea::make('consent_text.'.$locale)
                 ->label(__('section-engine-newsletter::admin.consent'))
                 ->helperText(__('section-engine-newsletter::admin.consent_help'))
+                ->default(fn (string $operation): ?string => $operation === 'create' ? $defaults['consent_text'] : null)
                 ->required($locale === $defaultLocale),
             Textarea::make('success_text.'.$locale)
                 ->label(__('section-engine-newsletter::admin.success'))
-                ->helperText(__('section-engine-newsletter::admin.success_help')),
+                ->helperText(__('section-engine-newsletter::admin.success_help'))
+                ->default(fn (string $operation): ?string => $operation === 'create' ? $defaults['success_text'] : null),
             TextInput::make('confirmation_subject.'.$locale)
                 ->label(__('section-engine-newsletter::admin.subject'))
                 ->helperText(__('section-engine-newsletter::admin.subject_help'))
+                ->default(fn (string $operation): ?string => $operation === 'create' ? $defaults['confirmation_subject'] : null)
                 ->maxLength(255),
             Textarea::make('confirmation_intro.'.$locale)
                 ->label(__('section-engine-newsletter::admin.intro'))
-                ->helperText(__('section-engine-newsletter::admin.intro_help')),
+                ->helperText(__('section-engine-newsletter::admin.intro_help'))
+                ->default(fn (string $operation): ?string => $operation === 'create' ? $defaults['confirmation_intro'] : null),
         ];
     }
 

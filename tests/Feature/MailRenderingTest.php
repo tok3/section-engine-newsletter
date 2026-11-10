@@ -21,13 +21,13 @@ class MailRenderingTest extends TestCase
             'app.name' => 'Host Site',
             'section-engine-newsletter.mail.brand_name' => 'Example Dispatch',
             'section-engine-newsletter.mail.logo_url' => $logoUrl,
-            'section-engine-newsletter.mail.footer' => ['en' => 'English legal footer', 'de' => 'Deutscher Rechtshinweis'],
+            'section-engine-newsletter.mail.footer' => ['en' => 'English legal footer', 'de' => 'Deutscher Rechtshinweis', 'es' => 'Aviso legal en español'],
         ]);
         $token = str_repeat('m', 64);
         $list = NewsletterList::factory()->create([
             'key' => 'weekly-'.(NewsletterList::query()->count() + 1),
             'name' => 'Weekly Review',
-            'confirmation_intro' => ['en' => 'English custom introduction.', 'de' => 'Deutscher eigener Einleitungstext.'],
+            'confirmation_intro' => ['en' => 'English custom introduction.', 'de' => 'Deutscher eigener Einleitungstext.', 'es' => 'Introducción personalizada en español.'],
         ]);
         $subscription = Subscription::factory()->create([
             'list_id' => $list->id,
@@ -51,6 +51,7 @@ class MailRenderingTest extends TestCase
         return [
             'English' => ['en', 'Hello from Example Dispatch', 'Please confirm your subscription to Weekly Review.', 'English custom introduction.', 'Confirm subscription', 'English legal footer'],
             'German' => ['de', 'Hallo von Example Dispatch', 'Bitte bestätige deine Anmeldung für Weekly Review.', 'Deutscher eigener Einleitungstext.', 'Anmeldung bestätigen', 'Deutscher Rechtshinweis'],
+            'Spanish' => ['es', 'Hola desde Example Dispatch', 'Confirma tu suscripción a Weekly Review.', 'Introducción personalizada en español.', 'Confirmar suscripción', 'Aviso legal en español'],
         ];
     }
 

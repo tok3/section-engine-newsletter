@@ -79,6 +79,52 @@ class ListsAdminTest extends AdminTestCase
             ->assertFormFieldExists('confirmation_intro.es');
     }
 
+    public function test_create_prefills_all_list_texts_for_german_english_and_spanish(): void
+    {
+        config([
+            'section-engine.locales.default' => 'de',
+            'section-engine.locales.available' => ['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español'],
+        ]);
+
+        Livewire::test(CreateNewsletterList::class)->assertFormSet([
+            'consent_text' => [
+                'de' => 'Ich möchte Newsletter-Updates erhalten.',
+                'en' => 'I would like to receive newsletter updates.',
+                'es' => 'Quiero recibir novedades por correo electrónico.',
+            ],
+            'success_text' => [
+                'de' => 'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung über den Button darin – erst dann bist du eingetragen. Keine E-Mail erhalten? Schau auch im Spam-Ordner nach.',
+                'en' => "Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.",
+                'es' => '¡Casi listo! Te hemos enviado un correo electrónico. Confirma tu suscripción con el botón que contiene; solo entonces quedarás suscrito. ¿No has recibido el correo? Revisa también la carpeta de spam.',
+            ],
+            'confirmation_subject' => [
+                'de' => 'Bitte bestätige deine Newsletter-Anmeldung',
+                'en' => 'Please confirm your newsletter subscription',
+                'es' => 'Confirma tu suscripción al boletín',
+            ],
+            'confirmation_intro' => [
+                'de' => 'Bitte bestätige, dass du diesen Newsletter erhalten möchtest.',
+                'en' => 'Please confirm that you would like to receive this newsletter.',
+                'es' => 'Confirma que deseas recibir este boletín.',
+            ],
+        ]);
+    }
+
+    public function test_unknown_site_language_prefills_english_list_texts(): void
+    {
+        config([
+            'section-engine.locales.default' => 'fr',
+            'section-engine.locales.available' => ['fr' => 'Français'],
+        ]);
+
+        Livewire::test(CreateNewsletterList::class)->assertFormSet([
+            'consent_text.fr' => 'I would like to receive newsletter updates.',
+            'success_text.fr' => "Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.",
+            'confirmation_subject.fr' => 'Please confirm your newsletter subscription',
+            'confirmation_intro.fr' => 'Please confirm that you would like to receive this newsletter.',
+        ]);
+    }
+
     public function test_embedded_on_section_is_only_visible_while_editing_and_has_an_empty_state(): void
     {
         $list = NewsletterList::factory()->create();
