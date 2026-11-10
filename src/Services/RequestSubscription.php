@@ -26,22 +26,36 @@ class RequestSubscription
             $subscription = Subscription::query()->where('subscriber_id', $subscriber->id)->where('list_id', $list->id)->lockForUpdate()->first();
             $isNew = $subscription === null;
             $resubscribe = $subscription?->status === SubscriptionStatus::Unsubscribed;
-            if ($subscription?->status === SubscriptionStatus::Confirmed || ($subscription?->status === SubscriptionStatus::Pending && $subscription->requested_at->gt(now()->subMinutes(config('section-engine-newsletter.resend_cooldown_minutes'))))) {
-                $this->record($subscription, SubscriptionEventType::Requested, $context, $request, ['mail_requested' => false]);
+            $alreadyConfirmed = $subscription?->status === SubscriptionStatus::Confirmed;
+            $withinCooldown = $subscription?->requested_at->gt(now()->subMinutes(config('section-engine-newsletter.resend_cooldown_minutes'))) ?? false;
+            if ($subscription && $withinCooldown && ($alreadyConfirmed || $subscription->status === SubscriptionStatus::Pending)) {
+                $this->record($subscription, SubscriptionEventType::Requested, $context, $request, array_filter([
+                    'mail_requested' => false,
+                    'already_confirmed' => $alreadyConfirmed ?: null,
+                ], fn (mixed $value): bool => $value !== null));
 
                 return $subscription;
             }
             $token = Str::random(64);
             $snapshot = $context['consent_snapshot'];
             $subscription ??= new Subscription(['subscriber_id' => $subscriber->id, 'list_id' => $list->id]);
-            $subscription->fill([
-                'status' => SubscriptionStatus::Pending, 'tag' => $context['tag'], 'source_page_id' => $context['page_id'],
+            $attributes = [
+                'tag' => $context['tag'], 'source_page_id' => $context['page_id'],
                 'source_url' => $context['url'], 'source_locale' => $context['locale'], 'consent_text_snapshot' => $snapshot,
                 'consent_hash' => hash('sha256', $snapshot), 'requested_at' => now(), 'requested_ip' => $request->ip(), 'requested_user_agent' => $request->userAgent(),
-                'confirmed_at' => null, 'confirmed_ip' => null, 'confirmed_user_agent' => null, 'unsubscribed_at' => null, 'unsubscribed_ip' => null,
                 'confirmation_token_hash' => hash('sha256', $token), 'confirmation_expires_at' => now()->addHours(config('section-engine-newsletter.confirmation_ttl_hours')),
-            ])->save();
-            $this->record($subscription, $resubscribe ? SubscriptionEventType::ResubscribeRequested : SubscriptionEventType::Requested, $context, $request, ['mail_requested' => true]);
+            ];
+            if (! $alreadyConfirmed) {
+                $attributes = array_merge($attributes, [
+                    'status' => SubscriptionStatus::Pending,
+                    'confirmed_at' => null, 'confirmed_ip' => null, 'confirmed_user_agent' => null, 'unsubscribed_at' => null, 'unsubscribed_ip' => null,
+                ]);
+            }
+            $subscription->fill($attributes)->save();
+            $this->record($subscription, $resubscribe ? SubscriptionEventType::ResubscribeRequested : SubscriptionEventType::Requested, $context, $request, array_filter([
+                'mail_requested' => true,
+                'already_confirmed' => $alreadyConfirmed ?: null,
+            ], fn (mixed $value): bool => $value !== null));
 
             if ($isNew || $resubscribe) {
                 DB::afterCommit(fn () => SubscriptionRequested::dispatch($subscription));

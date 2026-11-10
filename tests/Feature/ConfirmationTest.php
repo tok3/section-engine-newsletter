@@ -49,6 +49,71 @@ class ConfirmationTest extends SubscribeTest
         Mail::assertSentCount(2);
     }
 
+    public function test_confirmed_subscription_outside_cooldown_gets_new_mail_without_losing_confirmation_proof(): void
+    {
+        Mail::fake();
+        $payload = $this->formPayload();
+        $response = $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json();
+        $firstMail = Mail::sent(ConfirmSubscriptionMail::class)->first();
+        $subscription = Subscription::firstOrFail();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::31'])
+            ->withHeader('User-Agent', 'Initial confirmation browser')
+            ->post('/newsletter/confirm/'.$subscription->id.'/'.$firstMail->token)
+            ->assertRedirect();
+        $subscription->refresh();
+        $confirmedAt = $subscription->confirmed_at?->toISOString();
+        $confirmedIp = $subscription->confirmed_ip;
+        $confirmedUserAgent = $subscription->confirmed_user_agent;
+        $firstTokenHash = $subscription->confirmation_token_hash;
+        $firstRequestedAt = $subscription->requested_at;
+
+        $this->travel(11)->minutes();
+        $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
+
+        Mail::assertSentCount(2);
+        $resentMail = Mail::sent(ConfirmSubscriptionMail::class)->last();
+        $subscription->refresh();
+        $this->assertSame(SubscriptionStatus::Confirmed, $subscription->status);
+        $this->assertSame($confirmedAt, $subscription->confirmed_at?->toISOString());
+        $this->assertSame($confirmedIp, $subscription->confirmed_ip);
+        $this->assertSame($confirmedUserAgent, $subscription->confirmed_user_agent);
+        $this->assertNotSame($firstTokenHash, $subscription->confirmation_token_hash);
+        $this->assertSame(hash('sha256', $resentMail->token), $subscription->confirmation_token_hash);
+        $this->assertTrue($subscription->requested_at->isAfter($firstRequestedAt));
+        $requested = $subscription->events()->where('type', 'requested')->reorder()->latest('id')->firstOrFail();
+        $this->assertTrue($requested->meta['already_confirmed']);
+        $this->assertTrue($requested->meta['mail_requested']);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::32'])
+            ->withHeader('User-Agent', 'Repeated confirmation browser')
+            ->post('/newsletter/confirm/'.$subscription->id.'/'.$resentMail->token)
+            ->assertRedirect();
+        $subscription->refresh();
+        $this->assertSame(SubscriptionStatus::Confirmed, $subscription->status);
+        $this->assertSame($confirmedAt, $subscription->confirmed_at?->toISOString());
+        $this->assertSame($confirmedIp, $subscription->confirmed_ip);
+        $this->assertSame($confirmedUserAgent, $subscription->confirmed_user_agent);
+        $this->assertSame(1, $subscription->events()->where('type', 'confirmed')->count());
+    }
+
+    public function test_confirmed_subscription_within_cooldown_gets_identical_response_without_mail(): void
+    {
+        Mail::fake();
+        $payload = $this->formPayload();
+        $response = $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json();
+        $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
+        $subscription = Subscription::firstOrFail();
+        $this->post('/newsletter/confirm/'.$subscription->id.'/'.$mail->token)->assertRedirect();
+        $tokenHash = $subscription->fresh()->confirmation_token_hash;
+
+        $this->assertSame($response, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
+
+        Mail::assertSentCount(1);
+        $this->assertSame(SubscriptionStatus::Confirmed, $subscription->fresh()->status);
+        $this->assertSame($tokenHash, $subscription->fresh()->confirmation_token_hash);
+    }
+
     public function test_mail_is_queued_on_the_configured_connection_and_mailer(): void
     {
         Mail::fake();
