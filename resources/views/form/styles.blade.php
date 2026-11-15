@@ -55,6 +55,26 @@
 :where(.sen-newsletter__field--checkbox .sen-newsletter__error) {
     grid-column: 1 / -1;
 }
+:where(.sen-newsletter__title) {
+    font: inherit;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0 0 .5rem;
+}
+:where(.sen-newsletter__text) {
+    margin: 0 0 var(--sen-gap);
+}
+:where(.sen-newsletter__message .sen-newsletter__text:last-child) {
+    margin-bottom: 0;
+}
+:where(.sen-newsletter--page) {
+    display: grid;
+    gap: var(--sen-gap);
+}
+:where(.sen-newsletter--page > *) {
+    margin: 0;
+}
 :where(.sen-newsletter__consent) {
     margin: 0;
 }

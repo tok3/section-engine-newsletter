@@ -43,7 +43,17 @@
                 notice.setAttribute('aria-live', 'polite');
                 notice.setAttribute('tabindex', '-1');
                 notice.setAttribute('data-newsletter-success', '');
-                notice.textContent = result.message;
+                if (result.title) {
+                    const title = document.createElement('h2');
+                    title.className = 'sen-newsletter__title';
+                    title.textContent = result.title;
+                    const text = document.createElement('p');
+                    text.className = 'sen-newsletter__text';
+                    text.textContent = result.message;
+                    notice.append(title, text);
+                } else {
+                    notice.textContent = result.message;
+                }
                 form.replaceWith(notice);
                 notice.focus();
             }

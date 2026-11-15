@@ -22,6 +22,7 @@ class ConfirmController
         if (! $this->validToken($subscription, $token)) {
             return $this->resultPage(
                 $themePage,
+                __('section-engine-newsletter::newsletter.invalid_title', [], $subscription->source_locale),
                 __('section-engine-newsletter::newsletter.invalid_confirmation', [], $subscription->source_locale),
                 $subscription->source_locale,
                 404,
@@ -48,6 +49,7 @@ class ConfirmController
             'title' => $expired
                 ? __('section-engine-newsletter::newsletter.expired_title', [], $subscription->source_locale)
                 : __('section-engine-newsletter::newsletter.confirm_title', [], $subscription->source_locale),
+            'text' => __('section-engine-newsletter::newsletter.confirm_text', [], $subscription->source_locale),
             'expiredMessage' => __('section-engine-newsletter::newsletter.expired', [], $subscription->source_locale),
             'confirmLabel' => __('section-engine-newsletter::newsletter.confirm_button', [], $subscription->source_locale),
         ])->render();
@@ -69,6 +71,7 @@ class ConfirmController
             if (! $this->validToken($subscription, $token)) {
                 return $this->resultPage(
                     $themePage,
+                    __('section-engine-newsletter::newsletter.invalid_title', [], $subscription->source_locale),
                     __('section-engine-newsletter::newsletter.invalid_confirmation', [], $subscription->source_locale),
                     $subscription->source_locale,
                     404,
@@ -77,6 +80,7 @@ class ConfirmController
             if ($subscription->confirmation_expires_at?->isPast() ?? true) {
                 return $this->resultPage(
                     $themePage,
+                    __('section-engine-newsletter::newsletter.expired_title', [], $subscription->source_locale),
                     __('section-engine-newsletter::newsletter.expired', [], $subscription->source_locale),
                     $subscription->source_locale,
                     410,
@@ -99,7 +103,8 @@ class ConfirmController
 
             return $this->resultPage(
                 $themePage,
-                __('section-engine-newsletter::newsletter.confirmed', [], $subscription->source_locale),
+                __('section-engine-newsletter::newsletter.confirmed_title', [], $subscription->source_locale),
+                __('section-engine-newsletter::newsletter.confirmed_text', [], $subscription->source_locale),
                 $subscription->source_locale,
             );
         });
@@ -110,11 +115,11 @@ class ConfirmController
         return hash_equals($subscription->confirmation_token_hash ?? '', hash('sha256', $token));
     }
 
-    private function resultPage(ThemePageResponse $themePage, string $message, string $locale, int $status = 200): Response
+    private function resultPage(ThemePageResponse $themePage, string $title, string $message, string $locale, int $status = 200): Response
     {
         return $themePage->make(
-            $message,
-            view('section-engine-newsletter::pages.result', compact('message'))->render(),
+            $title,
+            view('section-engine-newsletter::pages.result', compact('title', 'message'))->render(),
             $locale,
             ['status' => $status, 'robots' => 'noindex, nofollow'],
         );

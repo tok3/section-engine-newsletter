@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 - 2026-11-15
+
+- Bestätigungs-, Ergebnis- und Abmeldeseiten zeigen eine kleine Überschrift (`h1.sen-newsletter__title`, Standardgröße 1,5 rem) mit einem Satz und Button bzw. Link statt einer Meldung als Seitenüberschrift. Neue, überschreibbare Texte: `confirm_text`, `confirmed_title`, `confirmed_text`, `invalid_title`, `unsubscribe_text`, `unsubscribed_title`; `confirm_title` lautet kürzer „Anmeldung bestätigen“.
+- Der Hinweis nach dem Absenden besteht aus Überschrift „Fast geschafft“ (`success_title`) und einem Satz; die JSON-Antwort enthält zusätzlich `title`. Der Standardtext lautet „Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.“ (Englisch und Spanisch entsprechend). Gespeicherte Listentexte bleiben unverändert.
+
 ## 1.2.0 - 2026-11-10
 
 - Nach einer Anmeldung ersetzt ein fokussierter, barrierefreier Hinweis genau die abgesendete Formularinstanz; der Text ist pro Liste und Sprache überschreibbar.

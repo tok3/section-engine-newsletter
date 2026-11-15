@@ -18,11 +18,12 @@ class SignupResponse
             $context['locale'],
             __('section-engine-newsletter::newsletter.success', [], $context['locale']),
         );
+        $title = __('section-engine-newsletter::newsletter.success_title', [], $context['locale']);
         if ($request->expectsJson()) {
-            return response()->json(['status' => 'success', 'message' => $message]);
+            return response()->json(['status' => 'success', 'title' => $title, 'message' => $message]);
         }
 
         return redirect()->to(explode('#', $context['url'], 2)[0].'#newsletter-'.$context['form_id'])
-            ->with('section-engine-newsletter.'.$context['form_id'], ['message' => $message, 'context' => $context]);
+            ->with('section-engine-newsletter.'.$context['form_id'], ['title' => $title, 'message' => $message, 'context' => $context]);
     }
 }

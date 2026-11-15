@@ -47,7 +47,7 @@ Der verschlüsselte Kontext schützt Liste, Tag, Seiten-ID, URL, Locale, zufäll
 
 Namen beginnen mit `section-engine-newsletter.`: `subscribe`, `confirm.show`, `confirm`, `unsubscribe.show`, `unsubscribe`, `unsubscribe.one-click` und der geschützte Nachweis `proof`. Die öffentlichen Formularrouten benutzen `web`; Abmeldungen verlangen eine Laravel-Signatur ohne Laufzeit. GET bestätigt/meldet niemals ab. RFC 8058 erwartet einen signierten POST mit `List-Unsubscribe=One-Click` und benötigt keinen CSRF-Token.
 
-Mit `Accept: application/json`: Erfolg `{status:"success",message:"…"}`, Validierungsfehler HTTP 422. Alle gültigen Anmeldestatus und Rate-Limit-Fälle haben dieselbe Erfolgsantwort. Der Erfolg ersetzt nur die abgesendete Formularinstanz durch einen fokussierten Statushinweis. Ohne JS geschieht das nach dem Redirect zur Herkunfts-URL mit Formularanker und instanzgebundener Session-Rückmeldung. Ein belegter Honeypot oder zu schneller/ungültiger Kontext wird abgelehnt, ohne Teilnehmer anzulegen.
+Mit `Accept: application/json`: Erfolg `{status:"success",title:"…",message:"…"}` (`title` seit 1.3.0), Validierungsfehler HTTP 422. Alle gültigen Anmeldestatus und Rate-Limit-Fälle haben dieselbe Erfolgsantwort. Der Erfolg ersetzt nur die abgesendete Formularinstanz durch einen fokussierten Statushinweis. Ohne JS geschieht das nach dem Redirect zur Herkunfts-URL mit Formularanker und instanzgebundener Session-Rückmeldung. Ein belegter Honeypot oder zu schneller/ungültiger Kontext wird abgelehnt, ohne Teilnehmer anzulegen.
 
 ## Modell- und View-Erweiterung
 

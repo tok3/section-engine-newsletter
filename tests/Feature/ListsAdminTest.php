@@ -93,9 +93,9 @@ class ListsAdminTest extends AdminTestCase
                 'es' => 'Quiero recibir novedades por correo electrónico.',
             ],
             'success_text' => [
-                'de' => 'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung über den Button darin – erst dann bist du eingetragen. Keine E-Mail erhalten? Schau auch im Spam-Ordner nach.',
-                'en' => "Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.",
-                'es' => '¡Casi listo! Te hemos enviado un correo electrónico. Confirma tu suscripción con el botón que contiene; solo entonces quedarás suscrito. ¿No has recibido el correo? Revisa también la carpeta de spam.',
+                'de' => 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.',
+                'en' => "We've sent you an email. You are only subscribed once you confirm there.",
+                'es' => 'Te hemos enviado un correo electrónico. Solo quedarás suscrito cuando confirmes la suscripción allí.',
             ],
             'confirmation_subject' => [
                 'de' => 'Bitte bestätige deine Newsletter-Anmeldung',
@@ -119,7 +119,7 @@ class ListsAdminTest extends AdminTestCase
 
         Livewire::test(CreateNewsletterList::class)->assertFormSet([
             'consent_text.fr' => 'I would like to receive newsletter updates.',
-            'success_text.fr' => "Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.",
+            'success_text.fr' => "We've sent you an email. You are only subscribed once you confirm there.",
             'confirmation_subject.fr' => 'Please confirm your newsletter subscription',
             'confirmation_intro.fr' => 'Please confirm that you would like to receive this newsletter.',
         ]);

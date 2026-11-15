@@ -69,7 +69,7 @@ class ConfirmationTest extends SubscribeTest
 
         $this->postJson('/newsletter/subscribe', $this->formPayload(locale: 'es'))
             ->assertOk()
-            ->assertJsonPath('message', '¡Casi listo! Te hemos enviado un correo electrónico. Confirma tu suscripción con el botón que contiene; solo entonces quedarás suscrito. ¿No has recibido el correo? Revisa también la carpeta de spam.');
+            ->assertJsonPath('message', 'Te hemos enviado un correo electrónico. Solo quedarás suscrito cuando confirmes la suscripción allí.');
 
         $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
         $this->assertSame('es', $mail->locale);
@@ -83,13 +83,13 @@ class ConfirmationTest extends SubscribeTest
         $this->get($confirmationUrl)
             ->assertOk()
             ->assertSee('<html lang="es">', false)
-            ->assertSee('Confirmar la suscripción al boletín');
+            ->assertSee('Confirmar la suscripción')->assertSee('Un clic más y recibirás el boletín por correo electrónico.');
 
         $subscription->update(['source_url' => null]);
         $this->post($confirmationUrl)
             ->assertOk()
             ->assertSee('<html lang="es">', false)
-            ->assertSee('Tu suscripción al boletín está confirmada.');
+            ->assertSee('Suscripción confirmada')->assertSee('A partir de ahora recibirás el boletín por correo electrónico.');
 
         $unsubscribeUrl = URL::signedRoute('section-engine-newsletter.unsubscribe.show', ['subscription' => $subscription]);
         $this->get($unsubscribeUrl)
@@ -143,7 +143,7 @@ class ConfirmationTest extends SubscribeTest
             ->withHeader('User-Agent', 'Replacement request browser')
             ->postJson('/newsletter/subscribe', $changedPayload)
             ->assertOk()
-            ->assertJsonPath('message', 'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung über den Button darin – erst dann bist du eingetragen. Keine E-Mail erhalten? Schau auch im Spam-Ordner nach.');
+            ->assertJsonPath('message', 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.');
 
         Mail::assertSentCount(2);
         $resentMail = Mail::sent(ConfirmSubscriptionMail::class)->last();
@@ -277,7 +277,7 @@ class ConfirmationTest extends SubscribeTest
     {
         foreach (['https://elsewhere.example/articles', null] as $sourceUrl) {
             [, $url] = $this->confirmation($sourceUrl);
-            $this->post($url)->assertOk()->assertSee('data-test-theme-layout', false)->assertSee('Your newsletter subscription is confirmed.');
+            $this->post($url)->assertOk()->assertSee('data-test-theme-layout', false)->assertSee('Subscription confirmed')->assertSee('From now on you will get the newsletter by email.');
         }
     }
 
