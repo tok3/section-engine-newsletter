@@ -21,7 +21,7 @@ return [
     'expired_title' => 'Bestätigungslink abgelaufen',
     'expired' => 'Dieser Bestätigungslink ist abgelaufen. Bitte fordere eine neue E-Mail an.',
     'invalid_confirmation' => 'Dieser Bestätigungslink ist ungültig.',
-    'success' => 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.',
+    'success' => 'Wir haben dir eine E-Mail an :email geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.',
     'invalid_form' => 'Dieses Formular ist abgelaufen oder ungültig. Bitte lade die Seite neu.',
     'email' => 'E-Mail-Adresse',
     'website' => 'Website (leer lassen)',
@@ -41,4 +41,5 @@ return [
     'unsubscribe_text' => 'Ein Klick, dann bekommst du keine Newsletter-E-Mails mehr.',
     'unsubscribed_title' => 'Abgemeldet',
     'success_title' => 'Fast geschafft',
+    'change_address' => 'Andere Adresse eingeben',
 ];

@@ -62,7 +62,9 @@ class PageLayoutTest extends TestCase
         $this->postJson('/newsletter/subscribe', $payload)->assertOk()->assertExactJson([
             'status' => 'success',
             'title' => 'Fast geschafft',
-            'message' => 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.',
+            'message' => 'Wir haben dir eine E-Mail an new@example.org geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.',
+            'email' => 'new@example.org',
+            'change' => 'Andere Adresse eingeben',
         ]);
 
         $this->post('/newsletter/subscribe', $this->payload('other@example.org'))->assertRedirect();
@@ -70,7 +72,7 @@ class PageLayoutTest extends TestCase
         $notice = '//*[@data-newsletter-success]';
         $this->assertSame(0, $xpath->query('//*[@data-newsletter-form]')->length);
         $this->assertSame('Fast geschafft', trim($xpath->query($notice.'//h2[@class="sen-newsletter__title"]')->item(0)?->textContent ?? ''));
-        $this->assertSame('Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.', trim($xpath->query($notice.'//p[contains(@class, "sen-newsletter__text")]')->item(0)?->textContent ?? ''));
+        $this->assertSame('Wir haben dir eine E-Mail an other@example.org geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.', trim($xpath->query($notice.'//p[contains(@class, "sen-newsletter__text")]')->item(0)?->textContent ?? ''));
     }
 
     /** @return array{email: string, context: string, website: string, consent: string} */

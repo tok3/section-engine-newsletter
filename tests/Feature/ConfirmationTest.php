@@ -69,7 +69,7 @@ class ConfirmationTest extends SubscribeTest
 
         $this->postJson('/newsletter/subscribe', $this->formPayload(locale: 'es'))
             ->assertOk()
-            ->assertJsonPath('message', 'Te hemos enviado un correo electrónico. Solo quedarás suscrito cuando confirmes la suscripción allí.');
+            ->assertJsonPath('message', 'Te hemos enviado un correo electrónico a new@example.org. Solo quedarás suscrito cuando confirmes la suscripción allí.');
 
         $mail = Mail::sent(ConfirmSubscriptionMail::class)->first();
         $this->assertSame('es', $mail->locale);
@@ -143,7 +143,7 @@ class ConfirmationTest extends SubscribeTest
             ->withHeader('User-Agent', 'Replacement request browser')
             ->postJson('/newsletter/subscribe', $changedPayload)
             ->assertOk()
-            ->assertJsonPath('message', 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.');
+            ->assertJsonPath('message', 'Wir haben dir eine E-Mail an new@example.org geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.');
 
         Mail::assertSentCount(2);
         $resentMail = Mail::sent(ConfirmSubscriptionMail::class)->last();

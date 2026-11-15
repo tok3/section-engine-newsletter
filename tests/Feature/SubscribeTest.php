@@ -30,7 +30,7 @@ class SubscribeTest extends TestCase
         $payload = $this->formPayload(' NEW@Example.org ');
         $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::1234'])->withHeader('User-Agent', 'Consent browser')->postJson('/newsletter/subscribe', $payload)
             ->assertOk()
-            ->assertJsonPath('message', "We've sent you an email. You are only subscribed once you confirm there.");
+            ->assertJsonPath('message', "We've sent an email to new@example.org. You are only subscribed once you confirm there.");
         $subscription = Subscription::with('subscriber', 'events')->firstOrFail();
         $this->assertSame('new@example.org', $subscription->subscriber->email);
         $this->assertSame(SubscriptionStatus::Pending, $subscription->status);
@@ -83,7 +83,7 @@ class SubscribeTest extends TestCase
 
         $this->postJson('/newsletter/subscribe', $payload)
             ->assertOk()
-            ->assertExactJson(['status' => 'success', 'title' => 'Almost done', 'message' => 'Eigener Hinweis']);
+            ->assertExactJson(['status' => 'success', 'title' => 'Almost done', 'message' => 'Eigener Hinweis', 'email' => 'new@example.org', 'change' => 'Use a different address']);
     }
 
     public function test_json_success_uses_german_default_notice_on_a_german_page(): void
@@ -92,7 +92,7 @@ class SubscribeTest extends TestCase
 
         $this->postJson('/newsletter/subscribe', $payload)
             ->assertOk()
-            ->assertJsonPath('message', 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.');
+            ->assertJsonPath('message', 'Wir haben dir eine E-Mail an new@example.org geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.');
     }
 
     public function test_invalid_inputs_store_nothing(): void
@@ -124,7 +124,11 @@ class SubscribeTest extends TestCase
         $this->assertSame($generic, $this->postJson('/newsletter/subscribe', $payload)->assertOk()->json());
         $this->assertDatabaseCount('section_engine_newsletter_events', $count);
         $this->postJson('/newsletter/subscribe', array_replace($payload, ['email' => 'second@example.org']))->assertOk();
-        $this->assertSame($generic, $this->postJson('/newsletter/subscribe', array_replace($payload, ['email' => 'third@example.org']))->assertOk()->json());
+        // Only the echoed address differs: the response never reveals limits or state.
+        $this->assertSame(
+            json_decode(str_replace('new@example.org', 'third@example.org', json_encode($generic)), true),
+            $this->postJson('/newsletter/subscribe', array_replace($payload, ['email' => 'third@example.org']))->assertOk()->json(),
+        );
         $this->assertDatabaseCount('section_engine_newsletter_subscribers', 2);
     }
 
@@ -167,7 +171,7 @@ class SubscribeTest extends TestCase
         $this->assertSame('status', $notices->item(0)?->attributes->getNamedItem('role')?->nodeValue);
         $this->assertTrue($notices->item(0)?->hasAttribute('autofocus'));
         $this->assertSame('Almost done', trim($xpath->query('.//h2', $notices->item(0))->item(0)?->textContent ?? ''));
-        $this->assertSame("We've sent you an email. You are only subscribed once you confirm there.", trim($xpath->query('.//p', $notices->item(0))->item(0)?->textContent ?? ''));
+        $this->assertSame("We've sent an email to a@example.org. You are only subscribed once you confirm there.", trim($xpath->query('.//p', $notices->item(0))->item(0)?->textContent ?? ''));
     }
 
     public function test_non_js_validation_errors_are_visible_on_the_original_form(): void

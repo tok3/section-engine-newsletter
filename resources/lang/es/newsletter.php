@@ -21,7 +21,7 @@ return [
     'expired_title' => 'El enlace de confirmación ha caducado',
     'expired' => 'Este enlace de confirmación ha caducado. Solicita un nuevo correo electrónico.',
     'invalid_confirmation' => 'Este enlace de confirmación no es válido.',
-    'success' => 'Te hemos enviado un correo electrónico. Solo quedarás suscrito cuando confirmes la suscripción allí.',
+    'success' => 'Te hemos enviado un correo electrónico a :email. Solo quedarás suscrito cuando confirmes la suscripción allí.',
     'invalid_form' => 'Este formulario ha caducado o no es válido. Vuelve a cargar la página.',
     'email' => 'Correo electrónico',
     'website' => 'Sitio web (dejar vacío)',
@@ -41,4 +41,5 @@ return [
     'unsubscribe_text' => 'Un clic y dejarás de recibir los correos del boletín.',
     'unsubscribed_title' => 'Baja confirmada',
     'success_title' => 'Casi listo',
+    'change_address' => 'Usar otra dirección',
 ];
