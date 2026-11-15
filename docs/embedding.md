@@ -18,7 +18,7 @@ Das erste Argument bezeichnet den Listenschlüssel. `tag` ist eine optionale fre
 
 ## Was Besucher sehen
 
-Ein sichtbares E-Mail-Label, den Einwilligungstext, standardmäßig eine Pflicht-Checkbox und den Anmeldebutton. Nach dem Absenden wird genau diese Formularinstanz durch einen fokussierten Hinweis mit `role="status"` ersetzt. Der Hinweis fordert eindeutig zur Bestätigung über die E-Mail auf und bleibt für alle Adresszustände identisch; sein Text lässt sich pro Liste und Sprache bearbeiten.
+Ein sichtbares E-Mail-Label, den Einwilligungstext, standardmäßig eine Pflicht-Checkbox und den Anmeldebutton. Nach dem Absenden wird genau diese Formularinstanz durch einen fokussierten Hinweis mit `role="status"` ersetzt: Überschrift (`h2.sen-newsletter__title`, Standard „Fast geschafft“) und ein Satz (`p.sen-newsletter__text`). Der Hinweis fordert eindeutig zur Bestätigung über die E-Mail auf und bleibt für alle Adresszustände identisch; der Satz lässt sich pro Liste und Sprache bearbeiten, die Überschrift über die Sprachdatei (`success_title`). Themes können umgebende Inhalte mit `:has([data-newsletter-success])` ausblenden, etwa den Werbetext neben dem Formular.
 
 Jede zulässige Anmeldung außerhalb der standardmäßig zehnminütigen Wiederholungssperre erhält eine Bestätigungsmail – auch eine bereits bestätigte Adresse. Deren Status bleibt bestätigt, der ursprüngliche Bestätigungsnachweis unverändert und ein erneuter Klick auf den neuen Link harmlos. Innerhalb des Cooldowns wird keine weitere Mail angefordert; die öffentliche Antwort bleibt in allen Fällen gleich.
 
@@ -27,6 +27,8 @@ Der Mail-Link öffnet eine Seite im vorhandenen Website-Theme mit Bestätigungsb
 Ohne JavaScript funktioniert das Formular über einen Redirect und ersetzt danach nur die abgesendete Instanz durch den fokussierbaren Hinweis. Mit JavaScript geschieht derselbe Austausch unmittelbar; Validierungs- und Netzwerkfehler bleiben im Formular und erhalten den Fokus. Mehrere Formulare auf einer Seite sind möglich.
 
 Formular, Absendehinweis, Bestätigungsmail sowie Bestätigungs- und Abmeldeseiten verwenden die Locale der Seite, auf der das Formular ausgegeben wurde. Für listenbezogene Texte gilt: Seitensprache → aufgelöste Standardsprache → Paketübersetzung. Ohne explizites `section-engine-newsletter.default_locale` ist die aufgelöste Standardsprache `section-engine.locales.default`; ein expliziter Paketwert bleibt als Fallback erhalten. Das Paket liefert vollständige Texte für `de`, `en` und `es`.
+
+Bestätigungs-, Ergebnis- und Abmeldeseiten zeigen eine kleine Überschrift (`h1.sen-newsletter__title`), einen Satz (`p.sen-newsletter__text`) und einen Button oder Link. Die Texte stehen in der Sprachdatei (`confirm_title`/`confirm_text`, `confirmed_title`/`confirmed_text`, `unsubscribe_title`/`unsubscribe_text`, `unsubscribed_title`/`unsubscribed`, `invalid_title`, `expired_title`) und lassen sich wie alle Paketübersetzungen über `lang/vendor/section-engine-newsletter` überschreiben, zum Beispiel für eine förmliche Anrede.
 
 ## Gestaltung
 

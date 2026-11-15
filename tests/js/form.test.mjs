@@ -76,3 +76,13 @@ test('shipped CSS gives inputs a visible border and buttons a 44px minimum heigh
   assert.notEqual(input.borderStyle, 'none');
   assert.ok(Number.parseFloat(button.minHeight) >= 44);
 });
+test('success shows the title as a heading and the message as one sentence', async () => {
+  const { document, submit } = setup(async () => ({ ok: true, json: async () => ({ status: 'success', title: 'Fast <b>geschafft</b>', message: 'Bitte bestätigen.' }) }));
+  submit(); await settle();
+  const notice = document.querySelector('[data-newsletter-success]');
+  const heading = notice.querySelector('h2.sen-newsletter__title');
+  assert.equal(heading.textContent, 'Fast <b>geschafft</b>');
+  assert.equal(heading.children.length, 0);
+  assert.equal(notice.querySelector('p.sen-newsletter__text').textContent, 'Bitte bestätigen.');
+  assert.equal(document.activeElement, notice);
+});

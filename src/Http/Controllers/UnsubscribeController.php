@@ -17,6 +17,7 @@ class UnsubscribeController
         $html = view('section-engine-newsletter::pages.unsubscribe', [
             'subscription' => $subscription,
             'title' => $title,
+            'text' => __('section-engine-newsletter::newsletter.unsubscribe_text', [], $subscription->source_locale),
             'buttonLabel' => __('section-engine-newsletter::newsletter.unsubscribe', [], $subscription->source_locale),
         ])->render();
 
@@ -40,14 +41,16 @@ class UnsubscribeController
 
     private function resultPage(Subscription $subscription, ThemePageResponse $themePage, SafeSourceUrl $safeSourceUrl): Response
     {
+        $title = __('section-engine-newsletter::newsletter.unsubscribed_title', [], $subscription->source_locale);
         $message = __('section-engine-newsletter::newsletter.unsubscribed', [], $subscription->source_locale);
         $returnUrl = $safeSourceUrl->get($subscription->source_url);
         $html = view('section-engine-newsletter::pages.result', [
+            'title' => $title,
             'message' => $message,
             'returnUrl' => $returnUrl,
             'returnLabel' => __('section-engine-newsletter::newsletter.return_to_site', [], $subscription->source_locale),
         ])->render();
 
-        return $themePage->make($message, $html, $subscription->source_locale, ['robots' => 'noindex, nofollow']);
+        return $themePage->make($title, $html, $subscription->source_locale, ['robots' => 'noindex, nofollow']);
     }
 }

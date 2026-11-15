@@ -30,7 +30,7 @@ class SubscribeTest extends TestCase
         $payload = $this->formPayload(' NEW@Example.org ');
         $this->withServerVariables(['REMOTE_ADDR' => '2001:db8::1234'])->withHeader('User-Agent', 'Consent browser')->postJson('/newsletter/subscribe', $payload)
             ->assertOk()
-            ->assertJsonPath('message', "Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.");
+            ->assertJsonPath('message', "We've sent you an email. You are only subscribed once you confirm there.");
         $subscription = Subscription::with('subscriber', 'events')->firstOrFail();
         $this->assertSame('new@example.org', $subscription->subscriber->email);
         $this->assertSame(SubscriptionStatus::Pending, $subscription->status);
@@ -83,7 +83,7 @@ class SubscribeTest extends TestCase
 
         $this->postJson('/newsletter/subscribe', $payload)
             ->assertOk()
-            ->assertExactJson(['status' => 'success', 'message' => 'Eigener Hinweis']);
+            ->assertExactJson(['status' => 'success', 'title' => 'Almost done', 'message' => 'Eigener Hinweis']);
     }
 
     public function test_json_success_uses_german_default_notice_on_a_german_page(): void
@@ -92,7 +92,7 @@ class SubscribeTest extends TestCase
 
         $this->postJson('/newsletter/subscribe', $payload)
             ->assertOk()
-            ->assertJsonPath('message', 'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung über den Button darin – erst dann bist du eingetragen. Keine E-Mail erhalten? Schau auch im Spam-Ordner nach.');
+            ->assertJsonPath('message', 'Wir haben dir eine E-Mail geschickt. Erst wenn du die Anmeldung dort bestätigst, bist du eingetragen.');
     }
 
     public function test_invalid_inputs_store_nothing(): void
@@ -166,7 +166,8 @@ class SubscribeTest extends TestCase
         $this->assertSame('newsletter-'.$context['form_id'], $notices->item(0)?->attributes->getNamedItem('id')?->nodeValue);
         $this->assertSame('status', $notices->item(0)?->attributes->getNamedItem('role')?->nodeValue);
         $this->assertTrue($notices->item(0)?->hasAttribute('autofocus'));
-        $this->assertSame("Almost done! We've sent you an email. Please confirm your subscription using the button in it – only then are you subscribed. No email? Please also check your spam folder.", trim($notices->item(0)?->textContent ?? ''));
+        $this->assertSame('Almost done', trim($xpath->query('.//h2', $notices->item(0))->item(0)?->textContent ?? ''));
+        $this->assertSame("We've sent you an email. You are only subscribed once you confirm there.", trim($xpath->query('.//p', $notices->item(0))->item(0)?->textContent ?? ''));
     }
 
     public function test_non_js_validation_errors_are_visible_on_the_original_form(): void

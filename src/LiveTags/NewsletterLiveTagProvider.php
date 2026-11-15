@@ -70,6 +70,7 @@ class NewsletterLiveTagProvider implements LiveTagProvider
             return view('section-engine-newsletter::form.success', [
                 'formId' => $feedback['form_id'],
                 'locale' => $data['locale'],
+                'title' => $feedback['title'] ?? null,
                 'message' => $feedback['message'],
                 'includeScript' => $includeScript,
                 'includeStyles' => $includeStyles,
