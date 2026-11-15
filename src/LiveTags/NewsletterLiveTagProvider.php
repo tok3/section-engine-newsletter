@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Tok3\SectionEngine\Contracts\LiveTagProvider;
 use Tok3\SectionEngine\Support\LiveTag;
 use Tok3\SectionEngine\Support\LiveTokenRenderContext;
+use Tok3\SectionEngineNewsletter\Http\Middleware\PrivateNewsletterFeedback;
 use Tok3\SectionEngineNewsletter\Models\NewsletterList;
 use Tok3\SectionEngineNewsletter\Support\FormContext;
 use Tok3\SectionEngineNewsletter\Support\ListTextDefaults;
@@ -67,11 +68,18 @@ class NewsletterLiveTagProvider implements LiveTagProvider
         }
 
         if (isset($feedback['message'])) {
+            request()->attributes->set(PrivateNewsletterFeedback::ATTRIBUTE, true);
+            $previous = $feedback['context'] ?? [];
+
             return view('section-engine-newsletter::form.success', [
                 'formId' => $feedback['form_id'],
+                'anchor' => 'newsletter-'.$data['list'].'-'.$data['instance'],
                 'locale' => $data['locale'],
                 'title' => $feedback['title'] ?? null,
                 'message' => $feedback['message'],
+                'email' => $feedback['email'] ?? null,
+                'changeUrl' => explode('#', (string) ($previous['url'] ?? $data['url']), 2)[0].'#newsletter-'.$data['list'].'-'.$data['instance'],
+                'changeLabel' => __('section-engine-newsletter::newsletter.change_address', [], $data['locale']),
                 'includeScript' => $includeScript,
                 'includeStyles' => $includeStyles,
             ])->render();

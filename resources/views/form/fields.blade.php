@@ -1,7 +1,7 @@
 @php($id = 'newsletter-'.$data['form_id'])
 @if($includeStyles)@include('section-engine-newsletter::form.styles')@endif
 @if(isset($feedback['form_id']))<span id="newsletter-{{ $feedback['form_id'] }}"></span>@endif
-<div class="sen-newsletter sen-newsletter--{{ $variant }}" lang="{{ $data['locale'] }}">
+<div class="sen-newsletter sen-newsletter--{{ $variant }}" id="newsletter-{{ $data['list'] }}-{{ $data['instance'] }}" lang="{{ $data['locale'] }}">
     @if($preview)<small class="sen-newsletter__preview">{{ __('section-engine-newsletter::newsletter.preview', ['list' => $list->name], $data['locale']) }}{{ $data['tag'] ? ', Tag: '.$data['tag'] : '' }}</small>@endif
     <form class="sen-newsletter__form" id="{{ $id }}" action="{{ url(trim(config('section-engine-newsletter.route_prefix'), '/').'/subscribe') }}" method="post" data-newsletter-form data-error-message="{{ __('section-engine-newsletter::newsletter.network_error', [], $data['locale']) }}">
         <input type="hidden" name="_token" value="{{ csrf_token() }}" @disabled($preview)>

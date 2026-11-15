@@ -17,6 +17,6 @@ class SubscribeController
             $subscriptions->handle($request->validated('email'), $request->formContext, $request);
         }
 
-        return $response->respond($request, $request->formContext);
+        return $response->respond($request, $request->formContext, (string) $request->validated('email'));
     }
 }

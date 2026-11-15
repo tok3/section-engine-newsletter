@@ -49,8 +49,33 @@
                     title.textContent = result.title;
                     const text = document.createElement('p');
                     text.className = 'sen-newsletter__text';
-                    text.textContent = result.message;
+                    const message = String(result.message || '');
+                    const at = result.email ? message.indexOf(result.email) : -1;
+                    if (at === -1) {
+                        text.textContent = message;
+                    } else {
+                        const mark = document.createElement('mark');
+                        mark.className = 'sen-newsletter__email';
+                        mark.textContent = result.email;
+                        text.append(message.slice(0, at), mark, message.slice(at + result.email.length));
+                    }
                     notice.append(title, text);
+                    if (result.change) {
+                        const change = document.createElement('p');
+                        change.className = 'sen-newsletter__change';
+                        const link = document.createElement('a');
+                        link.href = form.parentElement && form.parentElement.id ? '#' + form.parentElement.id : '#';
+                        link.setAttribute('data-newsletter-change', '');
+                        link.textContent = result.change;
+                        link.addEventListener('click', (click) => {
+                            click.preventDefault();
+                            notice.replaceWith(form);
+                            const email = form.querySelector('[name="email"]');
+                            if (email) { email.focus(); if (email.select) email.select(); }
+                        });
+                        change.append(link);
+                        notice.append(change);
+                    }
                 } else {
                     notice.textContent = result.message;
                 }

@@ -10,6 +10,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tok3\SectionEngine\Support\LiveTagRegistry;
 use Tok3\SectionEngineNewsletter\Console\PruneCommand;
+use Tok3\SectionEngineNewsletter\Http\Middleware\PrivateNewsletterFeedback;
 use Tok3\SectionEngineNewsletter\LiveTags\NewsletterLiveTagProvider;
 
 class SectionEngineNewsletterServiceProvider extends PackageServiceProvider
@@ -21,6 +22,7 @@ class SectionEngineNewsletterServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        $this->app['router']->pushMiddlewareToGroup('web', PrivateNewsletterFeedback::class);
         RateLimiter::for('section-engine-newsletter', fn (Request $request): array => [
             Limit::perMinute(config('section-engine-newsletter.rate_limits.per_ip'))->by('newsletter:ip:'.$request->ip()),
             Limit::perHour(config('section-engine-newsletter.rate_limits.per_email'))->by('newsletter:email:'.hash('sha256', mb_strtolower(trim((string) $request->input('email'))).'|'.$request->attributes->get('newsletter_list'))),

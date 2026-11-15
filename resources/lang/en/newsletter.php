@@ -21,7 +21,7 @@ return [
     'expired_title' => 'Confirmation link expired',
     'expired' => 'This confirmation link has expired. Please request a new email.',
     'invalid_confirmation' => 'This confirmation link is invalid.',
-    'success' => 'We\'ve sent you an email. You are only subscribed once you confirm there.',
+    'success' => 'We\'ve sent an email to :email. You are only subscribed once you confirm there.',
     'invalid_form' => 'This form has expired or is invalid. Please reload the page.',
     'email' => 'Email address',
     'website' => 'Website (leave empty)',
@@ -41,4 +41,5 @@ return [
     'unsubscribe_text' => 'One click and you will no longer get newsletter emails.',
     'unsubscribed_title' => 'Unsubscribed',
     'success_title' => 'Almost done',
+    'change_address' => 'Use a different address',
 ];

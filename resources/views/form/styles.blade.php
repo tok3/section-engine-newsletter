@@ -68,6 +68,14 @@
 :where(.sen-newsletter__message .sen-newsletter__text:last-child) {
     margin-bottom: 0;
 }
+:where(.sen-newsletter__email) {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    color: inherit;
+    padding: 0 .2em;
+}
+:where(.sen-newsletter__change) {
+    margin: var(--sen-gap) 0 0;
+}
 :where(.sen-newsletter--page) {
     display: grid;
     gap: var(--sen-gap);

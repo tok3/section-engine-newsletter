@@ -1,5 +1,9 @@
 # Changelog
 
+## Unveröffentlicht (1.4.0)
+
+- Der Hinweis nach dem Absenden nennt die eingegebene Adresse („Wir haben dir eine E-Mail an … geschickt.“), dezent hervorgehoben (`mark.sen-newsletter__email`, escaped, kein Link), und bietet „Andere Adresse eingeben“ an: mit JavaScript kehrt das Formular mit der bisherigen Eingabe zurück, ohne JavaScript führt der Link zum Formular-Anker `newsletter-<liste>-<n>`. Die Adresse steht nur in der Antwort bzw. der einmaligen Session-Rückmeldung, nie in einer URL; solche Antworten senden `Cache-Control: no-store, private` (neue Middleware in der `web`-Gruppe). JSON enthält zusätzlich `email` und `change`. Listentexte können die Adresse mit `:email` einsetzen; bestehende Texte ohne Platzhalter bleiben unverändert.
+
 ## 1.3.0 - 2026-11-15
 
 - Bestätigungs-, Ergebnis- und Abmeldeseiten zeigen eine kleine Überschrift (`h1.sen-newsletter__title`, Standardgröße 1,5 rem) mit einem Satz und Button bzw. Link statt einer Meldung als Seitenüberschrift. Neue, überschreibbare Texte: `confirm_text`, `confirmed_title`, `confirmed_text`, `invalid_title`, `unsubscribe_text`, `unsubscribed_title`; `confirm_title` lautet kürzer „Anmeldung bestätigen“.

@@ -80,19 +80,19 @@ class MailDeliveryTest extends TestCase
 
         foreach ([$confirmed->subscriber->email, 'new@example.org', $pending->subscriber->email, $resend->subscriber->email] as $email) {
             [$kernel, $request, $response] = $this->handle(array_replace($payload, ['email' => $email]), $json);
-            $signature = $this->signature($response);
+            $signature = $this->signature($response, $email);
             $this->assertSame($json ? 200 : 302, $response->getStatusCode());
             $responseSignature ??= $signature;
             $this->assertSame($responseSignature, $signature);
             $kernel->terminate($request, $response);
-            $this->assertSame($signature, $this->signature($response));
+            $this->assertSame($signature, $this->signature($response, $email));
         }
 
         config(['section-engine-newsletter.rate_limits.per_ip' => 1]);
         [$kernel, $request, $response] = $this->handle(array_replace($payload, ['email' => 'limited@example.org']), $json);
-        $this->assertSame($responseSignature, $this->signature($response));
+        $this->assertSame($responseSignature, $this->signature($response, 'limited@example.org'));
         $kernel->terminate($request, $response);
-        $this->assertSame($responseSignature, $this->signature($response));
+        $this->assertSame($responseSignature, $this->signature($response, 'limited@example.org'));
         $this->assertDatabaseMissing('section_engine_newsletter_subscribers', ['email' => 'limited@example.org']);
         $new = Subscriber::where('email', 'new@example.org')->firstOrFail()->subscriptions()->firstOrFail();
         $this->assertSame('pending', $new->status->value);
@@ -120,7 +120,8 @@ class MailDeliveryTest extends TestCase
         Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'Confirmation queue unavailable');
     }
 
-    private function signature(Response $response): array
+    /** The notice echoes the submitted address; everything else must not depend on the state. */
+    private function signature(Response $response, string $email): array
     {
         $headers = $response->headers->all();
         unset($headers['set-cookie']);
@@ -128,6 +129,6 @@ class MailDeliveryTest extends TestCase
         $this->assertMatchesRegularExpression('/^[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/', $headers['date'][0]);
         $headers['date'] = ['<valid HTTP date>'];
 
-        return [$response->getStatusCode(), $response->getContent(), $headers];
+        return [$response->getStatusCode(), str_replace($email, '<submitted address>', (string) $response->getContent()), $headers];
     }
 }

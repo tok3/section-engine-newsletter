@@ -86,3 +86,22 @@ test('success shows the title as a heading and the message as one sentence', asy
   assert.equal(notice.querySelector('p.sen-newsletter__text').textContent, 'Bitte bestätigen.');
   assert.equal(document.activeElement, notice);
 });
+test('success highlights the submitted address as text and the change link brings the form back', async () => {
+  const { document, submit } = setup(async () => ({ ok: true, json: async () => ({ status: 'success', title: 'Fast geschafft', message: 'Mail an <b>x</b>@example.org ist unterwegs.', email: '<b>x</b>@example.org', change: 'Andere Adresse eingeben' }) }));
+  const { node } = submit(); await settle();
+  const notice = document.querySelector('[data-newsletter-success]');
+  const mark = notice.querySelector('p.sen-newsletter__text mark.sen-newsletter__email');
+  assert.equal(mark.textContent, '<b>x</b>@example.org');
+  assert.equal(mark.children.length, 0);
+  assert.equal(notice.querySelector('p.sen-newsletter__text').textContent, 'Mail an <b>x</b>@example.org ist unterwegs.');
+  const link = notice.querySelector('a[data-newsletter-change]');
+  assert.equal(link.textContent, 'Andere Adresse eingeben');
+  assert.equal(link.getAttribute('href').includes('example.org'), false);
+  const click = new document.defaultView.MouseEvent('click', { bubbles: true, cancelable: true });
+  link.dispatchEvent(click);
+  assert.equal(click.defaultPrevented, true);
+  assert.equal(document.querySelector('[data-newsletter-success]'), null);
+  assert.equal(document.getElementById('first'), node);
+  assert.equal(document.activeElement, node.querySelector('[name=email]'));
+  assert.equal(node.querySelector('[name=email]').value, 'a@example.org');
+});
